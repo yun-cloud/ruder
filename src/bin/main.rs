@@ -21,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    latest_release.assets[5].download(&client).await?;
+    latest_release.assets[5].download(&client, "./output").await?;
 
     Ok(())
 }

@@ -1,10 +1,13 @@
 use anyhow::anyhow;
+use log::info;
 use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;
 use serde::Deserialize;
+use std::fs;
 use std::fs::File;
 use std::io::copy;
+use std::path::Path;
 use std::path::PathBuf;
 use url::Url;
 
@@ -86,8 +89,8 @@ pub async fn query_latest_release(
 }
 
 impl Asset {
-    pub async fn download(&self, client: &Client) -> anyhow::Result<()> {
-        /* TODO: prefix directory */
+    pub async fn download<P: AsRef<Path>>(&self, client: &Client, dir: P) -> anyhow::Result<()> {
+        fs::create_dir_all(&dir)?;
 
         let response = client.get(&self.browser_download_url).send().await?;
         response
@@ -100,7 +103,8 @@ impl Asset {
 
         let mut dest = {
             let filepath = self.download_filename()?;
-            let filename = filepath.file_name().unwrap();
+            let filename = dir.as_ref().join(filepath);
+            info!("filename: {:?}", filename);
             File::create(filename)?
         };
         copy(&mut content.as_ref(), &mut dest)?;
