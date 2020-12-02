@@ -52,17 +52,21 @@ pub_fields! {
     }
 }
 
-pub async fn query_latest_release(owner: &str, repo: &str) -> anyhow::Result<Release> {
+pub async fn create_github_client() -> anyhow::Result<Client> {
+    let mut headers = header::HeaderMap::new();
+    headers.insert(header::USER_AGENT, HeaderValue::from_static("reqwest_try"));
+
+    let client = Client::builder().default_headers(headers).build()?;
+
+    Ok(client)
+}
+
+pub async fn query_latest_release(client: &Client, owner: &str, repo: &str) -> anyhow::Result<Release> {
     let request_url = Url::parse(&format!(
         "https://api.github.com/repos/{owner}/{repo}/releases/latest",
         owner = owner,
         repo = repo
     ))?;
-
-    let mut headers = header::HeaderMap::new();
-    headers.insert(header::USER_AGENT, HeaderValue::from_static("reqwest_try"));
-
-    let client = Client::builder().default_headers(headers).build()?;
 
     let response = client
         .get(request_url.as_str())
@@ -76,6 +80,10 @@ pub async fn query_latest_release(owner: &str, repo: &str) -> anyhow::Result<Rel
 }
 
 impl Asset {
+    pub fn download(&self) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     pub fn download_filename(&self) -> anyhow::Result<PathBuf> {
         let browser_download_url = &self.browser_download_url;
 
