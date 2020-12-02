@@ -674,6 +674,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "skip_error",
  "tokio",
  "url",
 ]
@@ -893,6 +894,12 @@ checksum = "ce32ea0c6c56d5eacaeb814fbed9960547021d3edd010ded1425f180536b20ab"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "skip_error"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1f4fea4f8264edb50a211ff59c812107a0596205b4c513e2ccfa8c26e2a4a08"
 
 [[package]]
 name = "slab"
