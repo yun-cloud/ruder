@@ -3,6 +3,8 @@ use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;
 use serde::Deserialize;
+use std::fs::File;
+use std::io::copy;
 use std::path::PathBuf;
 use url::Url;
 
@@ -61,7 +63,11 @@ pub async fn create_github_client() -> anyhow::Result<Client> {
     Ok(client)
 }
 
-pub async fn query_latest_release(client: &Client, owner: &str, repo: &str) -> anyhow::Result<Release> {
+pub async fn query_latest_release(
+    client: &Client,
+    owner: &str,
+    repo: &str,
+) -> anyhow::Result<Release> {
     let request_url = Url::parse(&format!(
         "https://api.github.com/repos/{owner}/{repo}/releases/latest",
         owner = owner,
@@ -80,7 +86,25 @@ pub async fn query_latest_release(client: &Client, owner: &str, repo: &str) -> a
 }
 
 impl Asset {
-    pub fn download(&self) -> anyhow::Result<()> {
+    pub async fn download(&self, client: &Client) -> anyhow::Result<()> {
+        /* TODO: prefix directory */
+
+        let response = client.get(&self.browser_download_url).send().await?;
+        response
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .filter(|&x| x == HeaderValue::from_static("application/octet-stream"))
+            .ok_or_else(|| anyhow!("content type is not application/octet-stream"))?;
+
+        let content = response.bytes().await?;
+
+        let mut dest = {
+            let filepath = self.download_filename()?;
+            let filename = filepath.file_name().unwrap();
+            File::create(filename)?
+        };
+        copy(&mut content.as_ref(), &mut dest)?;
+
         Ok(())
     }
 

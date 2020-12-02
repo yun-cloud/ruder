@@ -21,33 +21,7 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    /*
-     *     let asset = &latest_release.assets[5];
-     *     let url = &asset.browser_download_url;
-     *     let filepath = asset.download_filename()?;
-     *     info!("url: {:?}", url);
-     *
-     *     let mut headers = header::HeaderMap::new();
-     *     headers.insert(header::USER_AGENT, HeaderValue::from_static("reqwest_try"));
-     *     let client = Client::builder()
-     *         .redirect(Policy::limited(100))
-     *         .default_headers(headers)
-     *         .build()?;
-     *
-     *     let response = client
-     *         .get(url)
-     *         .header(header::ACCEPT, "application/vnd.github.v3+json")
-     *         .send()
-     *         .await?;
-     *     info!("response: {:#?}", response);
-     *     let content = response.text().await?;
-     *
-     *     let mut dest = {
-     *         let filename = filepath.file_name().unwrap();
-     *         File::create(filename)?
-     *     };
-     *     copy(&mut content.as_bytes(), &mut dest)?;
-     */
+    latest_release.assets[5].download(&client).await?;
 
     Ok(())
 }
