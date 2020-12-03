@@ -6,10 +6,14 @@ use skip_error::skip_error;
 async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
 
+    let owner = "BurntSushi";
+    let repo = "ripgrep";
+    let tmpdir = "./output";
+
     let client = create_github_client().await?;
 
-    let latest_release = query_latest_release(&client, "BurntSushi", "ripgrep").await?;
-    // info!("latest_release: {:#?}", latest_release);
+    let latest_release = query_latest_release(&client, owner, repo).await?;
+    info!("latest_release: {:#?}", latest_release);
 
     for asset in &latest_release.assets {
         let filepath = skip_error!(asset.download_filename());
@@ -21,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    latest_release.assets[5].download(&client, "./output").await?;
+    latest_release.assets[5].download(&client, tmpdir).await?;
 
     Ok(())
 }
