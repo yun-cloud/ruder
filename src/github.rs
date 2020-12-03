@@ -89,8 +89,12 @@ pub async fn query_latest_release(
 }
 
 impl Asset {
-    pub async fn download<P: AsRef<Path>>(&self, client: &Client, dir: P) -> anyhow::Result<()> {
-        fs::create_dir_all(&dir)?;
+    pub async fn download<P: AsRef<Path>>(
+        &self,
+        client: &Client,
+        dst: P,
+    ) -> anyhow::Result<PathBuf> {
+        fs::create_dir_all(&dst)?;
 
         let response = client.get(&self.browser_download_url).send().await?;
         response
@@ -101,15 +105,12 @@ impl Asset {
 
         let content = response.bytes().await?;
 
-        let mut dest = {
-            let filepath = self.download_filename()?;
-            let filename = dir.as_ref().join(filepath);
-            info!("filename: {:?}", filename);
-            File::create(filename)?
-        };
+        let filepath = self.download_filename()?;
+        let filename = dst.as_ref().join(filepath);
+        let mut dest = File::create(&filename)?;
         copy(&mut content.as_ref(), &mut dest)?;
 
-        Ok(())
+        Ok(filename)
     }
 
     pub fn download_filename(&self) -> anyhow::Result<PathBuf> {

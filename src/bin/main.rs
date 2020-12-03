@@ -25,7 +25,8 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    latest_release.assets[5].download(&client, tmpdir).await?;
+    let filepath = latest_release.assets[5].download(&client, tmpdir).await?;
+    info!("filepath: {:?}", filepath);
 
     Ok(())
 }
