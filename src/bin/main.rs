@@ -13,26 +13,32 @@ async fn main() -> anyhow::Result<()> {
     let owner = "BurntSushi";
     let repo = "ripgrep";
     let tmpdir = Path::new("./output");
+    let asset_download_filename = Path::new("ripgrep-12.1.1-x86_64-unknown-linux-musl.tar.gz");
+    info!("owner: {:?}", owner);
+    info!("repo: {:?}", repo);
+    info!("tmpdir: {:?}", tmpdir);
+    info!("asset_download_filename: {:?}", asset_download_filename);
 
     let client = create_github_client().await?;
-
     let latest_release = query_latest_release(&client, owner, repo).await?;
-    info!("latest_release: {:#?}", latest_release);
+    // info!("latest_release: {:#?}", latest_release);
 
     for asset in &latest_release.assets {
-        let filepath = skip_error!(asset.download_filename());
-        info!(
-            "filepath: {:?}, {:?}, {:?}",
-            filepath,
-            filepath.file_stem(),
-            filepath.extension()
-        );
+        let download_filename = skip_error!(asset.download_filename());
+        /*
+         * info!(
+         *     "filepath: {:?}, {:?}, {:?}",
+         *     download_filename,
+         *     download_filename.file_stem(),
+         *     download_filename.extension()
+         * );
+         */
+        if download_filename == asset_download_filename {
+            let filepath = asset.download(&client, tmpdir).await?;
+            unpack_tar_gz(filepath, tmpdir)?;
+            break;
+        }
     }
-
-    let filepath = latest_release.assets[5].download(&client, tmpdir).await?;
-    info!("filepath: {:?}", filepath);
-
-    unpack_tar_gz(filepath, tmpdir)?;
 
     Ok(())
 }
