@@ -1,5 +1,4 @@
 use anyhow::anyhow;
-use log::info;
 use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;

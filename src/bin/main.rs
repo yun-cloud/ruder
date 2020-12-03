@@ -1,5 +1,9 @@
-use log::info;
+use std::path::Path;
+
+use query_the_github_api::extract::unpack_tar_gz;
 use query_the_github_api::github::{create_github_client, query_latest_release};
+
+use log::info;
 use skip_error::skip_error;
 
 #[tokio::main]
@@ -8,7 +12,7 @@ async fn main() -> anyhow::Result<()> {
 
     let owner = "BurntSushi";
     let repo = "ripgrep";
-    let tmpdir = "./output";
+    let tmpdir = Path::new("./output");
 
     let client = create_github_client().await?;
 
@@ -27,6 +31,8 @@ async fn main() -> anyhow::Result<()> {
 
     let filepath = latest_release.assets[5].download(&client, tmpdir).await?;
     info!("filepath: {:?}", filepath);
+
+    unpack_tar_gz(filepath, tmpdir)?;
 
     Ok(())
 }
