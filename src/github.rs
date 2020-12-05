@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use log::info;
 use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;
@@ -102,11 +103,11 @@ impl Asset {
             .filter(|&x| x == HeaderValue::from_static("application/octet-stream"))
             .ok_or_else(|| anyhow!("content type is not application/octet-stream"))?;
 
-        let content = response.bytes().await?;
-
         let filepath = self.download_filename()?;
+        info!("downloading {:?}...", filepath);
         let filename = dst.as_ref().join(filepath);
         let mut dest = File::create(&filename)?;
+        let content = response.bytes().await?;
         copy(&mut content.as_ref(), &mut dest)?;
 
         Ok(filename)

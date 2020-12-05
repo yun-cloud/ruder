@@ -18,4 +18,9 @@ pretty_env_logger = "0.4"
 skip_error = "1"
 tar = "0.4"
 flate2 = "1.0"
+thiserror = "1.0"
+zip = "0.5"
 
+[patch.crates-io]
+# for ZipArchive::extract() API which is not available at 0.5.8
+zip = { git = "https://github.com/zip-rs/zip", rev = "f5061c25e92c8808f27afbc7ea42f0bdc563c9c4" }

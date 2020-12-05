@@ -1,9 +1,43 @@
+use anyhow::anyhow;
+use log::info;
 use std::fs::File;
 use std::path::Path;
 use std::str::FromStr;
+use thiserror::Error;
+use zip::ZipArchive;
 
 use flate2::read::GzDecoder;
 use tar::Archive;
+
+pub fn unpack<P: AsRef<Path>, Q: AsRef<Path>>(path: P, dst: Q) -> anyhow::Result<()> {
+    let ext: TarExt = path
+        .as_ref()
+        .to_str()
+        .ok_or_else(|| anyhow!("failed to convert path to &str"))?
+        .parse()?;
+    info!("ext: {:?}", ext);
+
+    match ext {
+        TarExt::TarGz => {
+            let tar_gz = File::open(path)?;
+            let tar = GzDecoder::new(tar_gz);
+            let mut ar = Archive::new(tar);
+            ar.unpack(dst)?;
+        }
+        TarExt::Zip => {
+            let f = File::open(path)?;
+            let mut ar = ZipArchive::new(f)?;
+            ar.extract(dst)?;
+        }
+        TarExt::Tar => {
+            let tar = File::open(path)?;
+            let mut ar = Archive::new(tar);
+            ar.unpack(dst)?;
+        }
+    }
+
+    Ok(())
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 enum TarExt {
@@ -12,7 +46,8 @@ enum TarExt {
     Zip,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Error, Debug, Clone, PartialEq, Eq)]
+#[error("We can not handle this kind of tar, try .tar.gz, .tar, or .zip")]
 pub struct TarExtParseError(());
 
 impl FromStr for TarExt {

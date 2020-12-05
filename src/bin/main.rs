@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use query_the_github_api::extract::unpack_tar_gz;
+use query_the_github_api::extract::unpack;
 use query_the_github_api::github::{create_github_client, query_latest_release};
 
 use log::info;
@@ -24,7 +24,6 @@ async fn main() -> anyhow::Result<()> {
     // info!("latest_release: {:#?}", latest_release);
 
     for asset in &latest_release.assets {
-        let download_filename = skip_error!(asset.download_filename());
         /*
          * info!(
          *     "filepath: {:?}, {:?}, {:?}",
@@ -33,11 +32,16 @@ async fn main() -> anyhow::Result<()> {
          *     download_filename.extension()
          * );
          */
+
+        let download_filename = skip_error!(asset.download_filename());
         if download_filename == asset_download_filename {
             let filepath = asset.download(&client, tmpdir).await?;
-            unpack_tar_gz(filepath, tmpdir)?;
+            unpack(filepath, tmpdir)?;
             break;
         }
+
+        // let filepath = asset.download(&client, tmpdir).await?;
+        // skip_error!(unpack(filepath, tmpdir));
     }
 
     Ok(())
