@@ -15,7 +15,7 @@ tokio = { version = "0.2", features = ["full"] }
 url = "2.1"
 log = "0.4"
 pretty_env_logger = "0.4"
-skip_error = "1"
+skip_error = { version = "1", features = ["log"] }
 tar = "0.4"
 flate2 = "1.0"
 thiserror = "1.0"

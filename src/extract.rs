@@ -1,5 +1,4 @@
 use anyhow::anyhow;
-use log::info;
 use std::fs::File;
 use std::path::Path;
 use std::str::FromStr;
@@ -15,7 +14,6 @@ pub fn unpack<P: AsRef<Path>, Q: AsRef<Path>>(path: P, dst: Q) -> anyhow::Result
         .to_str()
         .ok_or_else(|| anyhow!("failed to convert path to &str"))?
         .parse()?;
-    info!("ext: {:?}", ext);
 
     match ext {
         TarExt::TarGz => {
