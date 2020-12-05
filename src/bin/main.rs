@@ -5,7 +5,6 @@ use query_the_github_api::github::{create_github_client, query_latest_release};
 
 use anyhow::anyhow;
 use log::info;
-use skip_error::skip_error_and_log;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -28,26 +27,25 @@ async fn main() -> anyhow::Result<()> {
     let latest_release = query_latest_release(&client, owner, repo).await?;
     // info!("latest_release: {:#?}", latest_release);
 
-    let mut found = false;
-    for asset in &latest_release.assets {
-        let download_filename = skip_error_and_log!(asset.download_filename(), log::Level::Info);
-        if download_filename != asset_download_filename {
-            continue;
-        }
-        found = true;
-        let filepath = asset.download(&client, tmpdir).await?;
-        unpack(filepath, tmpdir)?;
-        break;
-    }
-
-    if found == false {
-        return Err(anyhow!(
-            "{:?} is not exist in latest release of {}/{}",
-            asset_download_filename,
-            repo,
-            owner
-        ));
-    }
+    let download_asset = latest_release
+        .assets
+        .iter()
+        .find(|asset| {
+            asset
+                .download_filename()
+                .map(|filename| filename == asset_download_filename)
+                .unwrap_or(false)
+        })
+        .ok_or_else(|| {
+            anyhow!(
+                "{:?} is not exist in latest release of {}/{}",
+                asset_download_filename,
+                repo,
+                owner
+            )
+        })?;
+    let filepath = download_asset.download(&client, tmpdir).await?;
+    unpack(filepath, tmpdir)?;
 
     Ok(())
 }
