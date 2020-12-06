@@ -11,7 +11,13 @@ use toml::from_slice;
 
 #[derive(Debug, Deserialize)]
 struct Config {
+    default: Option<DefaultTable>,
     binary: Option<Vec<BinaryTable>>,
+}
+#[derive(Debug, Deserialize)]
+struct DefaultTable {
+    tmp_dir: Option<String>,
+    bin_dir: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -27,11 +33,8 @@ struct BinaryTable {
 async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
 
-    /*
-     * let binary_data: Config = toml::from_slice(&fs::read("binary.toml")?)?;
-     * info!("binary_data: {:#?}", binary_data);
-     * return Ok(());
-     */
+    let binary_data: Config = toml::from_slice(&fs::read("binary.toml")?)?;
+    info!("binary_data: {:#?}", binary_data);
 
     let owner = "BurntSushi";
     let repo = "ripgrep";
