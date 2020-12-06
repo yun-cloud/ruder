@@ -27,20 +27,23 @@ struct BinaryTable {
 async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
 
-    let binary_data: Config = toml::from_slice(&fs::read("binaries.toml")?)?;
-    // let binary_data: Config = toml::from_slice(&fs::read("example.toml")?)?;
-    info!("binary_data: {:#?}", binary_data);
-    return Ok(());
+    /*
+     * let binary_data: Config = toml::from_slice(&fs::read("binary.toml")?)?;
+     * info!("binary_data: {:#?}", binary_data);
+     * return Ok(());
+     */
 
     let owner = "BurntSushi";
     let repo = "ripgrep";
-    let tmpdir = Path::new("./output");
     let asset_download_filename = Path::new("ripgrep-12.1.1-x86_64-unknown-linux-musl.tar.gz");
     let src = Path::new("ripgrep-12.1.1-x86_64-unknown-linux-musl/rg");
-    let dst = Path::new("./bin/rg");
+    let dst = Path::new("rg");
+
+    let tmp_dir = Path::new("./output");
+    let bin_dir = Path::new("./bin");
     info!("owner: {:?}", owner);
     info!("repo: {:?}", repo);
-    info!("tmpdir: {:?}", tmpdir);
+    info!("tmp_dir: {:?}", tmp_dir);
     info!("asset_download_filename: {:?}", asset_download_filename);
     info!("src: {:?}", src);
     info!("dst: {:?}", dst);
@@ -66,13 +69,11 @@ async fn main() -> anyhow::Result<()> {
                 owner
             )
         })?;
-    let filepath = download_asset.download(&client, tmpdir).await?;
-    unpack(filepath, tmpdir)?;
+    let filepath = download_asset.download(&client, tmp_dir).await?;
+    unpack(filepath, tmp_dir)?;
 
-    if let Some(p) = dst.parent() {
-        fs::create_dir_all(p)?;
-    }
-    fs::rename(tmpdir.join(src), dst)?;
+    fs::create_dir_all(bin_dir)?;
+    fs::rename(tmp_dir.join(src), bin_dir.join(dst))?;
 
     Ok(())
 }
