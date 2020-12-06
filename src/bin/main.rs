@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::Path;
 
 use query_the_github_api::extract::unpack;
@@ -15,7 +16,7 @@ async fn main() -> anyhow::Result<()> {
     let tmpdir = Path::new("./output");
     let asset_download_filename = Path::new("ripgrep-12.1.1-x86_64-unknown-linux-musl.tar.gz");
     let src = Path::new("ripgrep-12.1.1-x86_64-unknown-linux-musl/rg");
-    let dst = Path::new("./bin/rs");
+    let dst = Path::new("./bin/rg");
     info!("owner: {:?}", owner);
     info!("repo: {:?}", repo);
     info!("tmpdir: {:?}", tmpdir);
@@ -46,6 +47,11 @@ async fn main() -> anyhow::Result<()> {
         })?;
     let filepath = download_asset.download(&client, tmpdir).await?;
     unpack(filepath, tmpdir)?;
+
+    if let Some(p) = dst.parent() {
+        fs::create_dir_all(p)?;
+    }
+    fs::rename(tmpdir.join(src), dst)?;
 
     Ok(())
 }
