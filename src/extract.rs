@@ -64,15 +64,6 @@ impl FromStr for TarExt {
     }
 }
 
-pub fn unpack_tar_gz<P: AsRef<Path>, Q: AsRef<Path>>(path: P, dst: Q) -> anyhow::Result<()> {
-    let tar_gz = File::open(path)?;
-    let tar = GzDecoder::new(tar_gz);
-    let mut ar = Archive::new(tar);
-    ar.unpack(dst)?;
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

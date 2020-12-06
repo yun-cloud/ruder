@@ -12,20 +12,6 @@ use reqwest::Client;
 use serde::Deserialize;
 use url::Url;
 
-macro_rules! pub_fields {
-    (
-        $(#[$deri:meta])*
-             struct $name:ident {
-                 $($field:ident: $t:ty,)*
-             }
-    ) => {
-        $(#[$deri])*
-        pub struct $name {
-            $(pub $field: $t),*
-        }
-    }
-}
-
 pub_fields! {
     #[derive(Debug, Deserialize)]
     struct Release {

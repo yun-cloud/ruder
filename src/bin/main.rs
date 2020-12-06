@@ -3,31 +3,10 @@ use std::path::Path;
 
 use query_the_github_api::extract::unpack;
 use query_the_github_api::github::{create_github_client, query_latest_release};
+use query_the_github_api::Config;
 
 use anyhow::anyhow;
 use log::info;
-use serde::Deserialize;
-use toml::from_slice;
-
-#[derive(Debug, Deserialize)]
-struct Config {
-    default: Option<DefaultTable>,
-    binary: Option<Vec<BinaryTable>>,
-}
-#[derive(Debug, Deserialize)]
-struct DefaultTable {
-    tmp_dir: Option<String>,
-    bin_dir: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct BinaryTable {
-    owner: String,
-    repo: String,
-    asset_download_filename: String,
-    src: String,
-    dst: String,
-}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
