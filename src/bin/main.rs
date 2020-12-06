@@ -6,10 +6,31 @@ use query_the_github_api::github::{create_github_client, query_latest_release};
 
 use anyhow::anyhow;
 use log::info;
+use serde::Deserialize;
+use toml::from_slice;
+
+#[derive(Debug, Deserialize)]
+struct Config {
+    binary: Option<Vec<BinaryTable>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct BinaryTable {
+    owner: String,
+    repo: String,
+    asset_download_filename: String,
+    src: String,
+    dst: String,
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
+
+    let binary_data: Config = toml::from_slice(&fs::read("binaries.toml")?)?;
+    // let binary_data: Config = toml::from_slice(&fs::read("example.toml")?)?;
+    info!("binary_data: {:#?}", binary_data);
+    return Ok(());
 
     let owner = "BurntSushi";
     let repo = "ripgrep";

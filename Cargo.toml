@@ -20,6 +20,7 @@ tar = "0.4"
 flate2 = "1.0"
 thiserror = "1.0"
 zip = "0.5"
+toml = "0.5"
 
 [patch.crates-io]
 # for ZipArchive::extract() API which is not available at 0.5.8

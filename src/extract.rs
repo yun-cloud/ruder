@@ -1,12 +1,12 @@
-use anyhow::anyhow;
 use std::fs::File;
 use std::path::Path;
 use std::str::FromStr;
-use thiserror::Error;
-use zip::ZipArchive;
 
+use anyhow::anyhow;
 use flate2::read::GzDecoder;
 use tar::Archive;
+use thiserror::Error;
+use zip::ZipArchive;
 
 pub fn unpack<P: AsRef<Path>, Q: AsRef<Path>>(path: P, dst: Q) -> anyhow::Result<()> {
     let ext: TarExt = path

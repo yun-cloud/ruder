@@ -1,14 +1,15 @@
+use std::fs;
+use std::fs::File;
+use std::io::copy;
+use std::path::Path;
+use std::path::PathBuf;
+
 use anyhow::anyhow;
 use log::info;
 use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;
 use serde::Deserialize;
-use std::fs;
-use std::fs::File;
-use std::io::copy;
-use std::path::Path;
-use std::path::PathBuf;
 use url::Url;
 
 macro_rules! pub_fields {
