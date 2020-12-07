@@ -54,3 +54,9 @@ impl Config {
             .unwrap_or_else(|| PathBuf::from("./bin"))
     }
 }
+
+impl<'a> Config {
+    pub fn binaries(&'a self) -> impl Iterator<Item = &BinaryTable> + 'a {
+        self.binary.iter().flat_map(|v| v.iter())
+    }
+}
