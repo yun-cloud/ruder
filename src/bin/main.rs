@@ -12,8 +12,15 @@ use log::info;
 async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
 
-    let binary_data: Config = toml::from_slice(&fs::read("binary.toml")?)?;
-    info!("binary_data: {:#?}", binary_data);
+    let config: Config = toml::from_slice(&fs::read("binary.toml")?)?;
+    info!("binary_data: {:#?}", config);
+
+    let tmp_dir = config.tmp_dir();
+    let bin_dir = config.bin_dir();
+    info!("tmp_dir: {:?}", tmp_dir);
+    info!("bin_dir: {:?}", bin_dir);
+
+    return Ok(());
 
     let owner = "BurntSushi";
     let repo = "ripgrep";
@@ -21,11 +28,8 @@ async fn main() -> anyhow::Result<()> {
     let src = Path::new("ripgrep-12.1.1-x86_64-unknown-linux-musl/rg");
     let dst = Path::new("rg");
 
-    let tmp_dir = Path::new("./output");
-    let bin_dir = Path::new("./bin");
     info!("owner: {:?}", owner);
     info!("repo: {:?}", repo);
-    info!("tmp_dir: {:?}", tmp_dir);
     info!("asset_download_filename: {:?}", asset_download_filename);
     info!("src: {:?}", src);
     info!("dst: {:?}", dst);

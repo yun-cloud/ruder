@@ -4,6 +4,8 @@ mod macros;
 pub mod extract;
 pub mod github;
 
+use std::path::PathBuf;
+
 use serde::Deserialize;
 
 pub_fields! {
@@ -30,5 +32,25 @@ pub_fields! {
         asset_download_filename: String,
         src: String,
         dst: String,
+    }
+}
+
+impl Config {
+    pub fn tmp_dir(&self) -> PathBuf {
+        self.default
+            .as_ref()
+            .map(|x| x.tmp_dir.as_ref())
+            .flatten()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("./output"))
+    }
+
+    pub fn bin_dir(&self) -> PathBuf {
+        self.default
+            .as_ref()
+            .map(|x| x.bin_dir.as_ref())
+            .flatten()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("./bin"))
     }
 }
