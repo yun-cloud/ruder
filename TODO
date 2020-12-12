@@ -1,0 +1,5 @@
+- [x] handle downloading executable file instead of tar
+- [ ] only get required executable (without downloading tar file into disk and unpacking whole content)
+- [ ] skip when executable exist
+- [ ] also check executable version
+- [ ] multithreading

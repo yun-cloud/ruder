@@ -15,3 +15,24 @@ repo = "bat"
 asset_download_filename = "bat-v0.17.1-x86_64-unknown-linux-musl.tar.gz"
 src = "bat-v0.17.1-x86_64-unknown-linux-musl/bat"
 dst = "bat"
+
+[[binary]]
+owner = "sharkdp"
+repo = "fd"
+asset_download_filename = "fd-v8.2.1-x86_64-unknown-linux-musl.tar.gz"
+src = "fd-v8.2.1-x86_64-unknown-linux-musl/fd"
+dst = "fd"
+
+[[binary]]
+owner = "neovim"
+repo = "neovim"
+asset_download_filename = "nvim.appimage"
+src = "nvim.appimage"
+dst = "nvim"
+
+[[binary]]
+owner = "dbrgn"
+repo = "tealdeer"
+asset_download_filename = "tldr-linux-x86_64-musl"
+src = "tldr-linux-x86_64-musl"
+dst = "tldr"

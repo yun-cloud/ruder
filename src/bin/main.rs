@@ -1,4 +1,5 @@
 use std::fs;
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
 use query_the_github_api::extract::unpack;
@@ -7,7 +8,7 @@ use query_the_github_api::Config;
 
 use anyhow::anyhow;
 use anyhow::Context;
-use log::info;
+use log::{info, warn};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -39,6 +40,10 @@ async fn main() -> anyhow::Result<()> {
         let latest_release = query_latest_release(&client, &owner, &repo)
             .await
             .with_context(|| "Fail to query latest release")?;
+        // info!("latest_release: {:#?}", latest_release);
+        info!("latest_release.tag_name: {:?}", latest_release.tag_name);
+        info!("latest_release.name: {:?}", latest_release.name);
+
         let download_asset = latest_release
             .assets
             .iter()
@@ -56,11 +61,18 @@ async fn main() -> anyhow::Result<()> {
                     owner
                 )
             })?;
+
         let filepath = download_asset
             .download(&client, &tmp_dir)
             .await
             .with_context(|| "Fail to download asset")?;
-        unpack(filepath, &tmp_dir).with_context(|| "Fail to unpack")?;
+        if let Err(_) = unpack(filepath, &tmp_dir) {
+            warn!("Failed to unpack, assume this asset is a executable");
+        }
+
+        let mut perms = fs::metadata(&src)?.permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&src, perms)?;
 
         fs::create_dir_all(&bin_dir)
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;

@@ -8,12 +8,10 @@ use std::path::PathBuf;
 
 use serde::Deserialize;
 
-pub_fields! {
-    #[derive(Debug, Deserialize)]
-    struct Config {
-        default: Option<DefaultTable>,
-        binary: Option<Vec<BinaryTable>>,
-    }
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    default: Option<DefaultTable>,
+    binary: Option<Vec<BinaryTable>>,
 }
 
 pub_fields! {
