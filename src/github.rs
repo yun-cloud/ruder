@@ -1,5 +1,6 @@
 use std::fs;
 use std::fs::File;
+use std::io;
 use std::io::copy;
 use std::io::Write;
 use std::path::Path;
@@ -7,12 +8,15 @@ use std::path::PathBuf;
 
 use anyhow::anyhow;
 use bytes::IntoBuf;
+use flate2::read::GzDecoder;
 use log::info;
 use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;
 use serde::Deserialize;
+use tar::Archive;
 use url::Url;
+use zip::ZipArchive;
 
 pub_fields! {
     #[derive(Debug, Deserialize)]
@@ -105,7 +109,8 @@ impl Asset {
     pub async fn download_to<W: Write>(
         &self,
         client: &Client,
-        mut writer: &mut W,
+        mut dst: &mut W,
+        src: &str,
     ) -> anyhow::Result<u64> {
         let response = client.get(&self.browser_download_url).send().await?;
 
@@ -116,9 +121,36 @@ impl Asset {
         }
 
         let content = response.bytes().await?;
+        let mut buf = content.into_buf();
 
-        // TODO decompression
-        let size = copy(&mut content.into_buf(), &mut writer)?;
+        let mut size = 0u64;
+        let filename = {
+            let name = self.download_filename()?;
+            String::from(name.to_str().expect("pathbuf to &str failed"))
+        };
+        if filename.ends_with(".tar.gz") {
+            let mut ar = Archive::new(GzDecoder::new(buf));
+            for entry in ar.entries()? {
+                let mut f = entry?;
+                if f.path()? == Path::new(&src) {
+                    size = io::copy(&mut f, &mut dst)?;
+                }
+            }
+        } else if filename.ends_with(".tar") {
+            let mut ar = Archive::new(buf);
+            for entry in ar.entries()? {
+                let mut f = entry?;
+                if f.path()? == Path::new(&src) {
+                    size = io::copy(&mut f, &mut dst)?;
+                }
+            }
+        } else if filename.ends_with(".zip") {
+            let mut ar = ZipArchive::new(buf)?;
+            let mut f = ar.by_name(src)?;
+            size = io::copy(&mut f, &mut dst)?;
+        } else {
+            size = io::copy(&mut buf, &mut dst)?;
+        }
 
         Ok(size)
     }

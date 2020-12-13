@@ -62,7 +62,9 @@ async fn main() -> anyhow::Result<()> {
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
         let mut dst_f = File::create(&dst)?;
 
-        let _size = download_asset.download_to(&client, &mut dst_f).await?;
+        let _size = download_asset
+            .download_to(&client, &mut dst_f, &binary.src)
+            .await?;
 
         // let filepath = download_asset
         //     .download(&client, &tmp_dir)
