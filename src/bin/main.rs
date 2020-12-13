@@ -44,15 +44,11 @@ async fn main() -> anyhow::Result<()> {
         info!("latest_release.tag_name: {:?}", latest_release.tag_name);
         info!("latest_release.name: {:?}", latest_release.name);
 
-        let download_asset = latest_release
+        let (download_asset, _download_filename) = latest_release
             .assets
             .iter()
-            .find(|asset| {
-                asset
-                    .download_filename()
-                    .map(|filename| filename == asset_download_filename)
-                    .unwrap_or(false)
-            })
+            .filter_map(|asset| asset.download_filename().ok().map(|name| (asset, name)))
+            .find(|(_, name)| name == &asset_download_filename)
             .ok_or_else(|| {
                 anyhow!(
                     "{:?} is not exist in latest release of {}/{}",
@@ -70,13 +66,13 @@ async fn main() -> anyhow::Result<()> {
             warn!("Failed to unpack, assume this asset is a executable");
         }
 
-        let mut perms = fs::metadata(&src)?.permissions();
-        perms.set_mode(0o755);
-        fs::set_permissions(&src, perms)?;
-
         fs::create_dir_all(&bin_dir)
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
         fs::rename(&src, &dst).with_context(|| format!("Fail to move {:?} to {:?}", src, dst))?;
+
+        let mut perms = fs::metadata(&dst)?.permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&dst, perms)?;
     }
 
     Ok(())
