@@ -1,14 +1,14 @@
 use std::fs;
+use std::fs::File;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
-use query_the_github_api::extract::unpack;
 use query_the_github_api::github::{create_github_client, query_latest_release};
 use query_the_github_api::Config;
 
 use anyhow::anyhow;
 use anyhow::Context;
-use log::{info, warn};
+use log::info;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -58,17 +58,23 @@ async fn main() -> anyhow::Result<()> {
                 )
             })?;
 
-        let filepath = download_asset
-            .download(&client, &tmp_dir)
-            .await
-            .with_context(|| "Fail to download asset")?;
-        if let Err(_) = unpack(filepath, &tmp_dir) {
-            warn!("Failed to unpack, assume this asset is a executable");
-        }
-
         fs::create_dir_all(&bin_dir)
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
-        fs::rename(&src, &dst).with_context(|| format!("Fail to move {:?} to {:?}", src, dst))?;
+        let mut dst_f = File::create(&dst)?;
+
+        let _size = download_asset.download_to(&client, &mut dst_f).await?;
+
+        // let filepath = download_asset
+        //     .download(&client, &tmp_dir)
+        //     .await
+        //     .with_context(|| "Fail to download asset")?;
+        // if let Err(_) = unpack(filepath, &tmp_dir) {
+        //     warn!("Failed to unpack, assume this asset is a executable");
+        // }
+
+        // fs::create_dir_all(&bin_dir)
+        //     .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
+        // fs::rename(&src, &dst).with_context(|| format!("Fail to move {:?} to {:?}", src, dst))?;
 
         let mut perms = fs::metadata(&dst)?.permissions();
         perms.set_mode(0o755);

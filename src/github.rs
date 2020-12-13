@@ -1,10 +1,12 @@
 use std::fs;
 use std::fs::File;
 use std::io::copy;
+use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
 use anyhow::anyhow;
+use bytes::IntoBuf;
 use log::info;
 use reqwest::header;
 use reqwest::header::HeaderValue;
@@ -98,6 +100,27 @@ impl Asset {
         copy(&mut content.as_ref(), &mut dest)?;
 
         Ok(filename)
+    }
+
+    pub async fn download_to<W: Write>(
+        &self,
+        client: &Client,
+        mut writer: &mut W,
+    ) -> anyhow::Result<u64> {
+        let response = client.get(&self.browser_download_url).send().await?;
+
+        if response.headers().get(header::CONTENT_TYPE)
+            != Some(&HeaderValue::from_static("application/octet-stream"))
+        {
+            return Err(anyhow!("content type is not application/octet-stream"));
+        }
+
+        let content = response.bytes().await?;
+
+        // TODO decompression
+        let size = copy(&mut content.into_buf(), &mut writer)?;
+
+        Ok(size)
     }
 
     pub fn download_filename(&self) -> anyhow::Result<PathBuf> {
