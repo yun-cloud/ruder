@@ -1,8 +1,11 @@
 use std::fs;
 use std::fs::File;
+use std::io;
+use std::io::Cursor;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
+use query_the_github_api::extract;
 use query_the_github_api::github::{create_github_client, query_latest_release};
 use query_the_github_api::Config;
 
@@ -44,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
         info!("latest_release.tag_name: {:?}", latest_release.tag_name);
         info!("latest_release.name: {:?}", latest_release.name);
 
-        let (download_asset, _download_filename) = latest_release
+        let (download_asset, download_filename) = latest_release
             .assets
             .iter()
             .filter_map(|asset| asset.download_filename().ok().map(|name| (asset, name)))
@@ -58,13 +61,19 @@ async fn main() -> anyhow::Result<()> {
                 )
             })?;
 
+        let executable = {
+            let data = download_asset.download(&client).await?;
+            let filename = download_filename
+                .to_str()
+                .expect("download_filename failed to convert to &str");
+            extract(Cursor::new(data), filename, &binary.src)?
+        };
+
         fs::create_dir_all(&bin_dir)
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
         let mut dst_f = File::create(&dst)?;
 
-        let _size = download_asset
-            .download_to(&client, &mut dst_f, &binary.src)
-            .await?;
+        io::copy(&mut Cursor::new(executable), &mut dst_f)?;
 
         // let filepath = download_asset
         //     .download(&client, &tmp_dir)
