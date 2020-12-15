@@ -64,16 +64,20 @@ impl<'a> Config {
     }
 }
 
-pub fn extract<R: Read + Seek>(mut r: R, filename: &str, src: &str) -> anyhow::Result<Vec<u8>> {
+pub fn extract<R: Read + Seek>(
+    mut r: R,
+    filename: &str,
+    src: &str,
+    mut buf: &mut Vec<u8>,
+) -> anyhow::Result<usize> {
     // TODO: handle src not exist
-    let mut _size: usize = 0;
-    let mut ret: Vec<u8> = vec![];
+    let mut size: usize = 0;
     if filename.ends_with(".tar.gz") {
         let mut ar = Archive::new(GzDecoder::new(r));
         for entry in ar.entries()? {
             let mut f = entry?;
             if f.path()? == Path::new(&src) {
-                _size = f.read_to_end(&mut ret)?;
+                size = f.read_to_end(&mut buf)?;
             }
         }
     } else if filename.ends_with(".tar") {
@@ -81,16 +85,16 @@ pub fn extract<R: Read + Seek>(mut r: R, filename: &str, src: &str) -> anyhow::R
         for entry in ar.entries()? {
             let mut f = entry?;
             if f.path()? == Path::new(&src) {
-                _size = f.read_to_end(&mut ret)?;
+                size = f.read_to_end(&mut buf)?;
             }
         }
     } else if filename.ends_with(".zip") {
         let mut ar = ZipArchive::new(r)?;
         let mut f = ar.by_name(src)?;
-        _size = f.read_to_end(&mut ret)?;
+        size = f.read_to_end(&mut buf)?;
     } else {
-        _size = r.read_to_end(&mut ret)?;
+        size = r.read_to_end(&mut buf)?;
     }
 
-    Ok(ret)
+    Ok(size)
 }

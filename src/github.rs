@@ -1,6 +1,8 @@
+use std::io::Read;
 use std::path::PathBuf;
 
 use anyhow::anyhow;
+use bytes::IntoBuf;
 use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;
@@ -71,7 +73,7 @@ pub async fn query_latest_release(
 }
 
 impl Asset {
-    pub async fn download(&self, client: &Client) -> anyhow::Result<Vec<u8>> {
+    pub async fn download(&self, client: &Client, mut buf: &mut Vec<u8>) -> anyhow::Result<usize> {
         let response = client.get(&self.browser_download_url).send().await?;
 
         let content_type = response.headers().get(header::CONTENT_TYPE);
@@ -80,8 +82,8 @@ impl Asset {
         }
 
         let content = response.bytes().await?;
-
-        Ok(content.as_ref().to_vec())
+        let size = content.into_buf().read_to_end(&mut buf)?;
+        Ok(size)
     }
 
     pub fn download_filename(&self) -> anyhow::Result<PathBuf> {
