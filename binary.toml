@@ -5,22 +5,22 @@ bin_dir = "./bin"
 [[binary]]
 owner = "BurntSushi"
 repo = "ripgrep"
-asset_download_filename = "ripgrep-12.1.1-x86_64-unknown-linux-musl.tar.gz"
-src = "ripgrep-12.1.1-x86_64-unknown-linux-musl/rg"
+asset_download_filename = "ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz"
+src = "ripgrep-{version}-x86_64-unknown-linux-musl/rg"
 dst = "rg"
 
 [[binary]]
 owner = "sharkdp"
 repo = "bat"
-asset_download_filename = "bat-v0.17.1-x86_64-unknown-linux-musl.tar.gz"
-src = "bat-v0.17.1-x86_64-unknown-linux-musl/bat"
+asset_download_filename = "bat-v{version}-x86_64-unknown-linux-musl.tar.gz"
+src = "bat-v{version}-x86_64-unknown-linux-musl/bat"
 dst = "bat"
 
 [[binary]]
 owner = "sharkdp"
 repo = "fd"
-asset_download_filename = "fd-v8.2.1-x86_64-unknown-linux-musl.tar.gz"
-src = "fd-v8.2.1-x86_64-unknown-linux-musl/fd"
+asset_download_filename = "fd-v{version}-x86_64-unknown-linux-musl.tar.gz"
+src = "fd-v{version}-x86_64-unknown-linux-musl/fd"
 dst = "fd"
 
 [[binary]]
@@ -40,6 +40,6 @@ dst = "tldr"
 [[binary]]
 owner = "ogham"
 repo = "exa"
-asset_download_filename = "exa-linux-x86_64-0.9.0.zip"
+asset_download_filename = "exa-linux-x86_64-{version}.zip"
 src = "exa-linux-x86_64"
 dst = "exa"

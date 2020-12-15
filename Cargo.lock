@@ -758,6 +758,7 @@ dependencies = [
  "flate2",
  "log",
  "pretty_env_logger",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

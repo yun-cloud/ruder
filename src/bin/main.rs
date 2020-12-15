@@ -12,6 +12,7 @@ use query_the_github_api::Config;
 use anyhow::anyhow;
 use anyhow::Context;
 use log::info;
+use regex::Regex;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -31,21 +32,37 @@ async fn main() -> anyhow::Result<()> {
         .await
         .with_context(|| "Fail to create github client")?;
     for binary in config.binaries() {
+        info!("===========================================================================");
         info!("binary: {:#?}", binary);
-        let owner = &binary.owner;
-        let repo = &binary.repo;
-        let asset_download_filename = PathBuf::from(&binary.asset_download_filename);
-        let src = tmp_dir.join(&binary.src);
-        let dst = bin_dir.join(&binary.dst);
-        info!("src: {:?}", src);
-        info!("dst: {:?}", dst);
 
-        let latest_release = query_latest_release(&client, &owner, &repo)
+        let latest_release = query_latest_release(&client, &binary.owner, &binary.repo)
             .await
             .with_context(|| "Fail to query latest release")?;
         // info!("latest_release: {:#?}", latest_release);
         info!("latest_release.tag_name: {:?}", latest_release.tag_name);
         info!("latest_release.name: {:?}", latest_release.name);
+
+        let version_re = Regex::new(r"(\d+).(\d+).(\d+)")?;
+        let version = vec![&latest_release.tag_name, &latest_release.name]
+            .into_iter()
+            .filter_map(|name| version_re.find(&name))
+            .next()
+            .map(|m| m.as_str().to_owned());
+        // warn!("version: {:?}", version);
+        if version.is_none() {
+            eprintln!("cannot find version from asset tag_name or name");
+            continue;
+        }
+        let version = version.unwrap();
+
+        let asset_download_filename = PathBuf::from(
+            binary
+                .asset_download_filename
+                .replace("{version}", &version),
+        );
+        // warn!("asset_download_filename: {:?}", asset_download_filename);
+        let src = binary.src.replace("{version}", &version);
+        // warn!("src: {:?}", src);
 
         let (download_asset, download_filename) = latest_release
             .assets
@@ -56,40 +73,31 @@ async fn main() -> anyhow::Result<()> {
                 anyhow!(
                     "{:?} is not exist in latest release of {}/{}",
                     asset_download_filename,
-                    repo,
-                    owner
+                    binary.repo,
+                    binary.owner
                 )
             })?;
 
         let executable = {
             let mut data: Vec<u8> = Vec::with_capacity(download_asset.size);
             let _size = download_asset.download(&client, &mut data).await?;
+            // warn!("asset download _size: {:?}", _size);
 
             let mut extracted: Vec<u8> = vec![];
             let filename = download_filename
                 .to_str()
                 .expect("download_filename failed to convert to &str");
-            let _size = extract(Cursor::new(data), filename, &binary.src, &mut extracted)?;
+            let _size = extract(Cursor::new(data), filename, &src, &mut extracted)?;
+            // warn!("extract _size: {:?}", _size);
             extracted
         };
 
+        let dst = bin_dir.join(&binary.dst);
         fs::create_dir_all(&bin_dir)
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
         let mut dst_f = File::create(&dst)?;
 
         io::copy(&mut Cursor::new(executable), &mut dst_f)?;
-
-        // let filepath = download_asset
-        //     .download(&client, &tmp_dir)
-        //     .await
-        //     .with_context(|| "Fail to download asset")?;
-        // if let Err(_) = unpack(filepath, &tmp_dir) {
-        //     warn!("Failed to unpack, assume this asset is a executable");
-        // }
-
-        // fs::create_dir_all(&bin_dir)
-        //     .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
-        // fs::rename(&src, &dst).with_context(|| format!("Fail to move {:?} to {:?}", src, dst))?;
 
         let mut perms = fs::metadata(&dst)?.permissions();
         perms.set_mode(0o755);

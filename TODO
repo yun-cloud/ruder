@@ -1,6 +1,10 @@
 - [x] handle downloading executable file instead of tar
 - [x] only get required executable (without downloading tar file into disk and unpacking whole content)
-- [ ] parse `version` from `tag_name` and template `version` in `binary.toml`
+- [ ] improve extract()
+  - handle src not found
+  - better way to handle `.tar.gz`, `.tar`, and `.zip`.
+- [x] parse `version` from `tag_name` and template `version` in `binary.toml`
+    - [ ] do this part in Config struct
 - [ ] skip when executable exist
 - [ ] also check executable version
 - [ ] multithreading
