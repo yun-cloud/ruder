@@ -5,8 +5,9 @@ use std::io::Cursor;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
-use query_the_github_api::extract;
+// use query_the_github_api::extract;
 use query_the_github_api::github::{create_github_client, query_latest_release};
+use query_the_github_api::Archive;
 use query_the_github_api::Config;
 
 use anyhow::anyhow;
@@ -78,24 +79,37 @@ async fn main() -> anyhow::Result<()> {
                 )
             })?;
 
-        let executable = {
-            let data = download_asset.download(&client).await?;
+        let mut executable = {
+            let data = download_asset
+                .download(&client)
+                .await
+                .with_context(|| "Failed to download asset")?;
 
-            let mut extracted: Vec<u8> = vec![];
             let filename = download_filename
                 .to_str()
-                .expect("download_filename failed to convert to &str");
-            let _size = extract(Cursor::new(data), filename, &src, &mut extracted)?;
-            // warn!("extract _size: {:?}", _size);
-            extracted
+                .expect("download_filename fail to convert to &str");
+            // let ar = Archive::new(Cursor::new(data), filename);
+            let ar = Archive::new(Cursor::new(data), filename);
+            ar.extract(&src)
+            /*
+             * let mut extracted: Vec<u8> = vec![];
+             * let filename = download_filename
+             *     .to_str()
+             *     .expect("download_filename failed to convert to &str");
+             * let _size = extract(Cursor::new(data), filename, &src, &mut extracted)?;
+             * // warn!("extract _size: {:?}", _size);
+             * extracted
+             */
         };
 
         let dst = bin_dir.join(&binary.dst);
         fs::create_dir_all(&bin_dir)
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
-        let mut dst_f = File::create(&dst)?;
+        let mut dst_f = File::create(&dst).with_context(|| "Fail to create destination file")?;
 
-        io::copy(&mut Cursor::new(executable), &mut dst_f)?;
+        // io::copy(&mut Cursor::new(executable), &mut dst_f)?;
+        io::copy(&mut executable, &mut dst_f)
+            .with_context(|| "fail to copy download executable to destination file")?;
 
         let mut perms = fs::metadata(&dst)?.permissions();
         perms.set_mode(0o755);

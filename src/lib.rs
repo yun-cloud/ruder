@@ -4,13 +4,12 @@ mod macros;
 // pub mod extract;
 pub mod github;
 
-use std::io::{Read, Seek};
+use std::io::{self, Cursor, Read, Seek};
 use std::path::Path;
 use std::path::PathBuf;
 
 use flate2::read::GzDecoder;
 use serde::Deserialize;
-use tar::Archive;
 use zip::ZipArchive;
 
 #[derive(Debug, Deserialize)]
@@ -73,7 +72,7 @@ pub fn extract<R: Read + Seek>(
     // TODO: handle src not exist
     let mut size: usize = 0;
     if filename.ends_with(".tar.gz") {
-        let mut ar = Archive::new(GzDecoder::new(r));
+        let mut ar = tar::Archive::new(GzDecoder::new(r));
         for entry in ar.entries()? {
             let mut f = entry?;
             if f.path()? == Path::new(&src) {
@@ -81,7 +80,7 @@ pub fn extract<R: Read + Seek>(
             }
         }
     } else if filename.ends_with(".tar") {
-        let mut ar = Archive::new(r);
+        let mut ar = tar::Archive::new(r);
         for entry in ar.entries()? {
             let mut f = entry?;
             if f.path()? == Path::new(&src) {
@@ -97,4 +96,85 @@ pub fn extract<R: Read + Seek>(
     }
 
     Ok(size)
+}
+
+#[derive(Debug)]
+pub struct Archive<R> {
+    data: R,
+    name: String,
+}
+
+impl<R> Archive<R> {
+    pub fn new(data: R, name: &str) -> Archive<R> {
+        let name = name.to_owned();
+        Archive { data, name }
+    }
+}
+
+impl<R> Archive<R> {
+    pub fn extract(self, src: &str) -> Extract<R> {
+        Extract::new(self.data, &self.name, src)
+    }
+}
+
+#[derive(Debug)]
+pub struct Extract<R> {
+    data: R,
+    name: String,
+    src: String,
+}
+
+impl<R> Extract<R> {
+    pub fn new(data: R, name: &str, src: &str) -> Extract<R> {
+        Extract {
+            data,
+            name: name.to_owned(),
+            src: src.to_owned(),
+        }
+    }
+}
+
+impl<R> Read for Extract<R>
+where
+    R: Read + Seek,
+{
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if self.name.ends_with(".tar.gz") {
+            let mut tmp: Vec<u8> = vec![];
+            let _size = self.data.read_to_end(&mut tmp)?;
+            log::error!("[.tar.gz] _size: {:?}", _size);
+            let mut ar = tar::Archive::new(GzDecoder::new(Cursor::new(tmp)));
+            for entry in ar.entries()? {
+                let mut f = entry?;
+                if f.path()? == Path::new(&self.src) {
+                    return f.read(buf);
+                }
+            }
+        } else if self.name.ends_with(".tar") {
+            let mut tmp: Vec<u8> = vec![];
+            let _size = self.data.read_to_end(&mut tmp)?;
+            log::error!("[.tar] _size: {:?}", _size);
+            let mut ar = tar::Archive::new(Cursor::new(tmp));
+            for entry in ar.entries()? {
+                let mut f = entry?;
+                if f.path()? == Path::new(&self.src) {
+                    return f.read(buf);
+                }
+            }
+        } else if self.name.ends_with(".zip") {
+            let mut tmp: Vec<u8> = vec![];
+            let _size = self.data.read_to_end(&mut tmp)?;
+            log::error!("[.zip] _size: {:?}", _size);
+            let mut ar = ZipArchive::new(Cursor::new(tmp))?;
+            let mut f = ar.by_name(&self.src)?;
+            return f.read(buf);
+        } else {
+            return self.data.read(buf);
+        }
+
+        Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "src not found when extracting",
+        ))
+    }
 }
