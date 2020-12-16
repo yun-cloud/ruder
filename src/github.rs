@@ -1,8 +1,7 @@
-use std::io::Read;
 use std::path::PathBuf;
 
 use anyhow::anyhow;
-use bytes::IntoBuf;
+use bytes::Buf;
 use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;
@@ -73,7 +72,7 @@ pub async fn query_latest_release(
 }
 
 impl Asset {
-    pub async fn download(&self, client: &Client, mut buf: &mut Vec<u8>) -> anyhow::Result<usize> {
+    pub async fn download(&self, client: &Client) -> anyhow::Result<bytes::Bytes> {
         let response = client.get(&self.browser_download_url).send().await?;
 
         let content_type = response.headers().get(header::CONTENT_TYPE);
@@ -81,9 +80,7 @@ impl Asset {
             return Err(anyhow!("content type is not application/octet-stream"));
         }
 
-        let content = response.bytes().await?;
-        let size = content.into_buf().read_to_end(&mut buf)?;
-        Ok(size)
+        Ok(response.bytes().await?.to_bytes())
     }
 
     pub fn download_filename(&self) -> anyhow::Result<PathBuf> {

@@ -79,9 +79,7 @@ async fn main() -> anyhow::Result<()> {
             })?;
 
         let executable = {
-            let mut data: Vec<u8> = Vec::with_capacity(download_asset.size);
-            let _size = download_asset.download(&client, &mut data).await?;
-            // warn!("asset download _size: {:?}", _size);
+            let data = download_asset.download(&client).await?;
 
             let mut extracted: Vec<u8> = vec![];
             let filename = download_filename
