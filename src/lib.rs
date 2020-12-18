@@ -20,7 +20,6 @@ pub struct Config {
 pub_fields! {
     #[derive(Debug, Deserialize)]
     struct DefaultTable {
-        tmp_dir: Option<String>,
         bin_dir: Option<String>,
     }
 }
@@ -34,15 +33,6 @@ pub struct BinaryTable {
 }
 
 impl Config {
-    pub fn tmp_dir(&self) -> PathBuf {
-        self.default
-            .as_ref()
-            .map(|x| x.tmp_dir.as_ref())
-            .flatten()
-            .map(PathBuf::from)
-            .unwrap_or_else(|| PathBuf::from("./output"))
-    }
-
     pub fn bin_dir(&self) -> PathBuf {
         self.default
             .as_ref()

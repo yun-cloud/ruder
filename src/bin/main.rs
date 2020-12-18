@@ -21,9 +21,7 @@ async fn main() -> anyhow::Result<()> {
             .with_context(|| "Fail to deserialize 'binary.toml'")?;
     // info!("binary_data: {:#?}", config);
 
-    let tmp_dir = config.tmp_dir();
     let bin_dir = config.bin_dir();
-    info!("tmp_dir: {:?}", tmp_dir);
     info!("bin_dir: {:?}", bin_dir);
 
     let client = create_github_client()

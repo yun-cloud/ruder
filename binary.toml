@@ -1,5 +1,4 @@
 [default]
-tmp_dir = "./output"
 bin_dir = "./bin"
 
 [[binary]]

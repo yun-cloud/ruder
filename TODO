@@ -1,8 +1,5 @@
-- [x] handle downloading executable file instead of tar
-- [x] only get required executable (without downloading tar file into disk and unpacking whole content)
-- [x] parse `version` from `tag_name` and template `version` in `binary.toml`
-    - [x] do this part in Config struct
-- [ ] skip when executable exist
-- [ ] also check executable version
-- [ ] Not just for executable. Become a general release-asset downloader
-- [ ] multithreading
+- executable update policy
+  - skip_when_exist
+  - upgrade: check version
+- Not just for executable. Become a general release-asset downloader
+- multithreading
