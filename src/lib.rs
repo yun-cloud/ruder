@@ -6,8 +6,11 @@ pub mod github;
 use std::io::{self, Cursor, Read};
 use std::path::Path;
 use std::path::PathBuf;
+use std::process::Command;
 
 use flate2::read::GzDecoder;
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde::Deserialize;
 use zip::ZipArchive;
 
@@ -65,6 +68,38 @@ impl BinaryTable {
     pub fn dst(&self) -> &str {
         &self.dst
     }
+}
+
+pub fn binary_status<P: AsRef<Path>>(path: P) -> anyhow::Result<BinaryStatus> {
+    lazy_static! {
+        static ref VERSION_RE: Regex = Regex::new(r"(\d+).(\d+).(\d+)").unwrap();
+    }
+    fn inner(path: &Path) -> anyhow::Result<BinaryStatus> {
+        if path.exists() {
+            let output = Command::new(path).arg("--version").output()?;
+            let stdout = String::from_utf8(output.stdout)?;
+            let stderr = String::from_utf8(output.stderr)?;
+            let version = vec![&stdout, &stderr]
+                .into_iter()
+                .filter_map(|name| VERSION_RE.find(&name))
+                .next()
+                .map(|m| m.as_str().to_owned());
+            match version {
+                Some(version) => Ok(BinaryStatus::ExistWithVersion(version.as_str().to_owned())),
+                None => Ok(BinaryStatus::Exist),
+            }
+        } else {
+            Ok(BinaryStatus::NotFound)
+        }
+    }
+    inner(path.as_ref())
+}
+
+#[derive(Debug)]
+pub enum BinaryStatus {
+    NotFound,
+    Exist,
+    ExistWithVersion(String),
 }
 
 pub enum Archive<T: AsRef<[u8]>> {

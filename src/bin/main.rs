@@ -4,6 +4,7 @@ use std::io;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
+use query_the_github_api::binary_status;
 use query_the_github_api::github::{create_github_client, query_latest_release};
 use query_the_github_api::Archive;
 use query_the_github_api::Config;
@@ -19,7 +20,6 @@ async fn main() -> anyhow::Result<()> {
     let config: Config =
         toml::from_slice(&fs::read("binary.toml").with_context(|| "Fail to read 'binary.toml'")?)
             .with_context(|| "Fail to deserialize 'binary.toml'")?;
-    // info!("binary_data: {:#?}", config);
 
     let bin_dir = config.bin_dir();
     info!("bin_dir: {:?}", bin_dir);
@@ -30,14 +30,19 @@ async fn main() -> anyhow::Result<()> {
 
     for binary in config.binaries() {
         info!("===========================================================================");
-        info!("binary: {:#?}", binary);
+        log::info!("binary.repo(): {:?}", binary.repo());
+
+        fs::create_dir_all(&bin_dir)
+            .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
+
+        let dst = bin_dir.join(binary.dst());
+        let bin_status = binary_status(&dst).with_context(|| "Fail to get binary status")?;
+        log::warn!("binary_status: {:?}", bin_status);
 
         let latest_release = query_latest_release(&client, binary.repo())
             .await
             .with_context(|| "Fail to query latest release")?;
         // info!("latest_release: {:#?}", latest_release);
-        info!("latest_release.tag_name: {:?}", latest_release.tag_name);
-        info!("latest_release.name: {:?}", latest_release.name);
 
         let version = match latest_release.version() {
             Err(err) => {
@@ -46,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
             }
             Ok(version) => version,
         };
+        log::info!("version of release: {:?}", version);
 
         let src = binary.src(&version);
         let asset_download_filename = PathBuf::from(&binary.asset_download_filename(&version));
@@ -75,9 +81,6 @@ async fn main() -> anyhow::Result<()> {
             .extract(&src)
             .with_context(|| "Fail to extract archive")?;
 
-        fs::create_dir_all(&bin_dir)
-            .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
-        let dst = bin_dir.join(binary.dst());
         let mut dst_f = File::create(&dst).with_context(|| "Fail to create destination file")?;
         io::copy(&mut executable, &mut dst_f)
             .with_context(|| "fail to copy download executable to destination file")?;
