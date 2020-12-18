@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::anyhow;
 use bytes::Buf;
+use lazy_static::lazy_static;
+use regex::Regex;
 use reqwest::header;
 use reqwest::header::HeaderValue;
 use reqwest::Client;
@@ -64,6 +66,21 @@ pub async fn query_latest_release(client: &Client, repo: &str) -> anyhow::Result
     let latest_release: Release = response.json().await?;
 
     Ok(latest_release)
+}
+
+impl Release {
+    pub fn version(&self) -> anyhow::Result<String> {
+        lazy_static! {
+            static ref VERSION_RE: Regex = Regex::new(r"(\d+).(\d+).(\d+)").unwrap();
+        }
+        let version = vec![&self.tag_name, &self.name]
+            .into_iter()
+            .filter_map(|name| VERSION_RE.find(&name))
+            .next()
+            .map(|m| m.as_str().to_owned())
+            .ok_or_else(|| anyhow!("Cannot find version from tag_name or name"))?;
+        Ok(version)
+    }
 }
 
 impl Asset {

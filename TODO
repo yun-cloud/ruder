@@ -4,4 +4,5 @@
     - [ ] do this part in Config struct
 - [ ] skip when executable exist
 - [ ] also check executable version
+- [ ] Not just for executable. Become a general release-asset downloader
 - [ ] multithreading

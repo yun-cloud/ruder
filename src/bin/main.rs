@@ -11,7 +11,6 @@ use query_the_github_api::Config;
 use anyhow::anyhow;
 use anyhow::Context;
 use log::info;
-use regex::Regex;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -30,6 +29,7 @@ async fn main() -> anyhow::Result<()> {
     let client = create_github_client()
         .await
         .with_context(|| "Fail to create github client")?;
+
     for binary in config.binaries() {
         info!("===========================================================================");
         info!("binary: {:#?}", binary);
@@ -41,18 +41,13 @@ async fn main() -> anyhow::Result<()> {
         info!("latest_release.tag_name: {:?}", latest_release.tag_name);
         info!("latest_release.name: {:?}", latest_release.name);
 
-        let version_re = Regex::new(r"(\d+).(\d+).(\d+)")?;
-        let version = vec![&latest_release.tag_name, &latest_release.name]
-            .into_iter()
-            .filter_map(|name| version_re.find(&name))
-            .next()
-            .map(|m| m.as_str().to_owned());
-        // warn!("version: {:?}", version);
-        if version.is_none() {
-            eprintln!("cannot find version from asset tag_name or name");
-            continue;
-        }
-        let version = version.unwrap();
+        let version = match latest_release.version() {
+            Err(err) => {
+                eprintln!("Fail to get version of release, {}", err);
+                continue;
+            }
+            Ok(version) => version,
+        };
 
         let asset_download_filename = PathBuf::from(
             binary
