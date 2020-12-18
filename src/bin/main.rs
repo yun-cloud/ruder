@@ -23,6 +23,7 @@ async fn main() -> anyhow::Result<()> {
 
     let bin_dir = config.bin_dir();
     info!("bin_dir: {:?}", bin_dir);
+    log::info!("config.upgrade_policy(): {:?}", config.upgrade_policy());
 
     let client = create_github_client()
         .await

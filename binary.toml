@@ -1,5 +1,6 @@
 [default]
 bin_dir = "./bin"
+upgrade_policy = "skip_when_exist"
 
 [[binary]]
 repo = "BurntSushi/ripgrep"

@@ -20,11 +20,11 @@ pub struct Config {
     binary: Option<Vec<BinaryTable>>,
 }
 
-pub_fields! {
-    #[derive(Debug, Deserialize)]
-    struct DefaultTable {
-        bin_dir: Option<String>,
-    }
+#[derive(Debug, Deserialize)]
+pub struct DefaultTable {
+    bin_dir: Option<String>,
+    #[serde(default)]
+    upgrade_policy: UpgradePolicy,
 }
 
 #[derive(Debug, Deserialize)]
@@ -43,6 +43,14 @@ impl Config {
             .flatten()
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("./bin"))
+    }
+
+    pub fn upgrade_policy(&self) -> UpgradePolicy {
+        // TODO: remove this, for debug usage now //
+        self.default
+            .as_ref()
+            .map(|x| x.upgrade_policy)
+            .unwrap_or_default()
     }
 }
 
@@ -67,6 +75,22 @@ impl BinaryTable {
 
     pub fn dst(&self) -> &str {
         &self.dst
+    }
+}
+
+#[derive(Debug, Copy, Clone, Deserialize)]
+pub enum UpgradePolicy {
+    #[serde(rename(deserialize = "always"))]
+    Always,
+    #[serde(rename(deserialize = "upgrade"))]
+    Upgrade,
+    #[serde(rename(deserialize = "skip_when_exist"))]
+    SkipWhenExist,
+}
+
+impl Default for UpgradePolicy {
+    fn default() -> Self {
+        UpgradePolicy::Upgrade
     }
 }
 
