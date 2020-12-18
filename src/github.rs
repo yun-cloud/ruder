@@ -49,14 +49,9 @@ pub async fn create_github_client() -> anyhow::Result<Client> {
     Ok(client)
 }
 
-pub async fn query_latest_release(
-    client: &Client,
-    owner: &str,
-    repo: &str,
-) -> anyhow::Result<Release> {
+pub async fn query_latest_release(client: &Client, repo: &str) -> anyhow::Result<Release> {
     let request_url = Url::parse(&format!(
-        "https://api.github.com/repos/{owner}/{repo}/releases/latest",
-        owner = owner,
+        "https://api.github.com/repos/{repo}/releases/latest",
         repo = repo
     ))?;
 

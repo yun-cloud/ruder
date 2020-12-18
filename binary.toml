@@ -3,43 +3,37 @@ tmp_dir = "./output"
 bin_dir = "./bin"
 
 [[binary]]
-owner = "BurntSushi"
-repo = "ripgrep"
+repo = "BurntSushi/ripgrep"
 asset_download_filename = "ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz"
 src = "ripgrep-{version}-x86_64-unknown-linux-musl/rg"
 dst = "rg"
 
 [[binary]]
-owner = "sharkdp"
-repo = "bat"
+repo = "sharkdp/bat"
 asset_download_filename = "bat-v{version}-x86_64-unknown-linux-musl.tar.gz"
 src = "bat-v{version}-x86_64-unknown-linux-musl/bat"
 dst = "bat"
 
 [[binary]]
-owner = "sharkdp"
-repo = "fd"
+repo = "sharkdp/fd"
 asset_download_filename = "fd-v{version}-x86_64-unknown-linux-musl.tar.gz"
 src = "fd-v{version}-x86_64-unknown-linux-musl/fd"
 dst = "fd"
 
 [[binary]]
-owner = "neovim"
-repo = "neovim"
+repo = "neovim/neovim"
 asset_download_filename = "nvim.appimage"
 src = "nvim.appimage"
 dst = "nvim"
 
 [[binary]]
-owner = "dbrgn"
-repo = "tealdeer"
+repo = "dbrgn/tealdeer"
 asset_download_filename = "tldr-linux-x86_64-musl"
 src = "tldr-linux-x86_64-musl"
 dst = "tldr"
 
 [[binary]]
-owner = "ogham"
-repo = "exa"
+repo = "ogham/exa"
 asset_download_filename = "exa-linux-x86_64-{version}.zip"
 src = "exa-linux-x86_64"
 dst = "exa"

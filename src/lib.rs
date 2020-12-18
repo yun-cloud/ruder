@@ -28,7 +28,6 @@ pub_fields! {
 pub_fields! {
     #[derive(Debug, Deserialize)]
     struct BinaryTable {
-        owner: String,
         repo: String,
         asset_download_filename: String,
         src: String,

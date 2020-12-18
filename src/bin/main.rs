@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
         info!("===========================================================================");
         info!("binary: {:#?}", binary);
 
-        let latest_release = query_latest_release(&client, &binary.owner, &binary.repo)
+        let latest_release = query_latest_release(&client, &binary.repo)
             .await
             .with_context(|| "Fail to query latest release")?;
         // info!("latest_release: {:#?}", latest_release);
@@ -70,10 +70,9 @@ async fn main() -> anyhow::Result<()> {
             .find(|(_, name)| name == &asset_download_filename)
             .ok_or_else(|| {
                 anyhow!(
-                    "{:?} is not exist in latest release of {}/{}",
+                    "{:?} is not exist in latest release of {}",
                     asset_download_filename,
                     binary.repo,
-                    binary.owner
                 )
             })?;
         let data = download_asset
@@ -89,11 +88,10 @@ async fn main() -> anyhow::Result<()> {
             .extract(&src)
             .with_context(|| "Fail to extract archive")?;
 
-        let dst = bin_dir.join(&binary.dst);
         fs::create_dir_all(&bin_dir)
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
+        let dst = bin_dir.join(&binary.dst);
         let mut dst_f = File::create(&dst).with_context(|| "Fail to create destination file")?;
-
         io::copy(&mut executable, &mut dst_f)
             .with_context(|| "fail to copy download executable to destination file")?;
 
