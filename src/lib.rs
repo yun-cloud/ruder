@@ -25,14 +25,12 @@ pub_fields! {
     }
 }
 
-pub_fields! {
-    #[derive(Debug, Deserialize)]
-    struct BinaryTable {
-        repo: String,
-        asset_download_filename: String,
-        src: String,
-        dst: String,
-    }
+#[derive(Debug, Deserialize)]
+pub struct BinaryTable {
+    repo: String,
+    asset_download_filename: String,
+    src: String,
+    dst: String,
 }
 
 impl Config {
@@ -58,6 +56,24 @@ impl Config {
 impl<'a> Config {
     pub fn binaries(&'a self) -> impl Iterator<Item = &BinaryTable> + 'a {
         self.binary.iter().flat_map(|v| v.iter())
+    }
+}
+
+impl BinaryTable {
+    pub fn src(&self, version: &str) -> String {
+        self.src.replace("{version}", version)
+    }
+
+    pub fn asset_download_filename(&self, version: &str) -> String {
+        self.asset_download_filename.replace("{version}", version)
+    }
+
+    pub fn repo(&self) -> &str {
+        &self.repo
+    }
+
+    pub fn dst(&self) -> &str {
+        &self.dst
     }
 }
 

@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
         info!("===========================================================================");
         info!("binary: {:#?}", binary);
 
-        let latest_release = query_latest_release(&client, &binary.repo)
+        let latest_release = query_latest_release(&client, binary.repo())
             .await
             .with_context(|| "Fail to query latest release")?;
         // info!("latest_release: {:#?}", latest_release);
@@ -49,14 +49,8 @@ async fn main() -> anyhow::Result<()> {
             Ok(version) => version,
         };
 
-        let asset_download_filename = PathBuf::from(
-            binary
-                .asset_download_filename
-                .replace("{version}", &version),
-        );
-        // warn!("asset_download_filename: {:?}", asset_download_filename);
-        let src = binary.src.replace("{version}", &version);
-        // warn!("src: {:?}", src);
+        let src = binary.src(&version);
+        let asset_download_filename = PathBuf::from(&binary.asset_download_filename(&version));
 
         let (download_asset, download_filename) = latest_release
             .assets
@@ -67,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
                 anyhow!(
                     "{:?} is not exist in latest release of {}",
                     asset_download_filename,
-                    binary.repo,
+                    binary.repo(),
                 )
             })?;
         let data = download_asset
@@ -85,7 +79,7 @@ async fn main() -> anyhow::Result<()> {
 
         fs::create_dir_all(&bin_dir)
             .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
-        let dst = bin_dir.join(&binary.dst);
+        let dst = bin_dir.join(binary.dst());
         let mut dst_f = File::create(&dst).with_context(|| "Fail to create destination file")?;
         io::copy(&mut executable, &mut dst_f)
             .with_context(|| "fail to copy download executable to destination file")?;
