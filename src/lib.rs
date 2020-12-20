@@ -42,6 +42,7 @@ impl Config {
             .as_ref()
             .map(|x| x.bin_dir.as_ref())
             .flatten()
+            .map(|s| shellexpand::tilde(s).into_owned())
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("./bin"))
     }
@@ -52,6 +53,7 @@ impl Config {
         let bin_status = binary_status(dst)
             .map_err(|e| log::warn!("binary_status() failed: {}", e))
             .unwrap_or(BinaryStatus::NotFound);
+        log::info!("bin_status: {:?}", bin_status);
 
         policy.need_to_upgrade(&bin_status, latest_version)
     }
