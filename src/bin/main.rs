@@ -50,10 +50,6 @@ async fn run_on_binary(
     fs::create_dir_all(&bin_dir)
         .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
 
-    let dst = bin_dir.join(binary.dst());
-    let bin_status = binary_status(&dst).with_context(|| "Fail to get binary status")?;
-    log::warn!("binary_status: {:?}", bin_status);
-
     let latest_release = query_latest_release(&client, binary.repo())
         .await
         .with_context(|| "Fail to query latest release")?;
@@ -61,6 +57,14 @@ async fn run_on_binary(
 
     let version = latest_release.version()?;
     log::info!("version of release: {:?}", version);
+
+    let dst = bin_dir.join(binary.dst());
+    let bin_status = binary_status(&dst).with_context(|| "Fail to get binary status")?;
+    log::warn!("binary_status: {:?}", bin_status);
+
+    if !config.need_to_upgrade(&binary, &version) {
+        return Ok(());
+    }
 
     let src = binary.src(&version);
     let asset_download_filename = PathBuf::from(&binary.asset_download_filename(&version));

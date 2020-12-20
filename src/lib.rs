@@ -46,7 +46,17 @@ impl Config {
             .unwrap_or_else(|| PathBuf::from("./bin"))
     }
 
-    pub fn upgrade_policy(&self) -> UpgradePolicy {
+    pub fn need_to_upgrade(&self, binary: &BinaryTable, latest_version: &Version) -> bool {
+        let policy = self.upgrade_policy();
+        let dst = self.bin_dir().join(binary.dst());
+        let bin_status = binary_status(dst).unwrap_or(BinaryStatus::NotFound);
+        log::warn!("policy: {:?}", policy);
+        log::warn!(": {:?}", bin_status);
+
+        policy.need_to_upgrade(&bin_status, latest_version)
+    }
+
+    fn upgrade_policy(&self) -> UpgradePolicy {
         // TODO: remove this, for debug usage now //
         self.default
             .as_ref()
@@ -93,6 +103,29 @@ pub enum UpgradePolicy {
 impl Default for UpgradePolicy {
     fn default() -> Self {
         UpgradePolicy::Upgrade
+    }
+}
+
+impl UpgradePolicy {
+    pub fn need_to_upgrade(&self, bin_status: &BinaryStatus, latest_version: &Version) -> bool {
+        use BinaryStatus::*;
+        use UpgradePolicy::*;
+
+        match self {
+            Always => true,
+            Upgrade => match bin_status {
+                ExistWithVersion(version) => version < latest_version,
+                Exist => {
+                    eprintln!("Can not get version from binary, ugprade anyway");
+                    true
+                }
+                _ => true,
+            },
+            SkipWhenExist => match bin_status {
+                NotFound => true,
+                _ => false,
+            },
+        }
     }
 }
 
