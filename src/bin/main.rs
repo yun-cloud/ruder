@@ -56,7 +56,7 @@ async fn run_on_binary(
     // info!("latest_release: {:#?}", latest_release);
 
     let version = latest_release.version()?;
-    log::info!("version of release: {:?}", version);
+    log::info!("version of release: {}", version);
 
     let dst = bin_dir.join(binary.dst());
     let bin_status = binary_status(&dst).with_context(|| "Fail to get binary status")?;

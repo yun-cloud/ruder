@@ -50,8 +50,6 @@ impl Config {
         let policy = self.upgrade_policy();
         let dst = self.bin_dir().join(binary.dst());
         let bin_status = binary_status(dst).unwrap_or(BinaryStatus::NotFound);
-        log::warn!("policy: {:?}", policy);
-        log::warn!(": {:?}", bin_status);
 
         policy.need_to_upgrade(&bin_status, latest_version)
     }
