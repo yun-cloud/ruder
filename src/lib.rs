@@ -183,7 +183,7 @@ impl<T: AsRef<[u8]>> Archive<T> {
         use Archive::*;
 
         let cur = Cursor::new(data);
-        if name.ends_with(".tar.gz") {
+        if name.ends_with(".tar.gz") || name.ends_with(".tgz") {
             Ok(TarGz(tar::Archive::new(GzDecoder::new(cur))))
         } else if name.ends_with(".tar") {
             Ok(Tar(tar::Archive::new(cur)))

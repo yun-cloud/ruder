@@ -39,3 +39,15 @@ repo = "ogham/exa"
 asset_download_filename = "exa-linux-x86_64-{version}.zip"
 src = "exa-linux-x86_64"
 dst = "exa"
+
+[[binary]]
+repo = "ninja-build/ninja"
+asset_download_filename = "ninja-linux.zip"
+src = "ninja"
+dst = "ninja"
+
+[[binary]]
+repo = "xxxserxxx/gotop"
+asset_download_filename = "gotop_v4.0.1_linux_amd64.tgz"
+src = "gotop"
+dst = "gotop"
