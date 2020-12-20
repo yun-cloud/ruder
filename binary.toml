@@ -1,8 +1,8 @@
 [default]
 bin_dir = "./bin"
 # upgrade_policy = "skip_when_exist"
-# upgrade_policy = "upgrade"
-upgrade_policy = "always"
+upgrade_policy = "upgrade"
+# upgrade_policy = "always"
 
 [[binary]]
 repo = "BurntSushi/ripgrep"
@@ -51,3 +51,9 @@ repo = "xxxserxxx/gotop"
 asset_download_filename = "gotop_v4.0.1_linux_amd64.tgz"
 src = "gotop"
 dst = "gotop"
+
+[[binary]]
+repo = "direnv/direnv"
+asset_download_filename = "direnv.linux-amd64"
+src = "direnv.linux-amd64"
+dst = "direnv"
