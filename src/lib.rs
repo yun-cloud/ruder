@@ -6,8 +6,12 @@ pub mod github;
 use std::io::{self, Cursor, Read};
 use std::path::Path;
 use std::path::PathBuf;
+use std::process::Command;
 
 use flate2::read::GzDecoder;
+use lazy_static::lazy_static;
+use regex::Regex;
+use semver::Version;
 use serde::Deserialize;
 use zip::ZipArchive;
 
@@ -17,11 +21,11 @@ pub struct Config {
     binary: Option<Vec<BinaryTable>>,
 }
 
-pub_fields! {
-    #[derive(Debug, Deserialize)]
-    struct DefaultTable {
-        bin_dir: Option<String>,
-    }
+#[derive(Debug, Deserialize)]
+pub struct DefaultTable {
+    bin_dir: Option<String>,
+    #[serde(default)]
+    upgrade_policy: UpgradePolicy,
 }
 
 #[derive(Debug, Deserialize)]
@@ -41,6 +45,22 @@ impl Config {
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("./bin"))
     }
+
+    pub fn need_to_upgrade(&self, binary: &BinaryTable, latest_version: &Version) -> bool {
+        let policy = self.upgrade_policy();
+        let dst = self.bin_dir().join(binary.dst());
+        let bin_status = binary_status(dst).unwrap_or(BinaryStatus::NotFound);
+
+        policy.need_to_upgrade(&bin_status, latest_version)
+    }
+
+    fn upgrade_policy(&self) -> UpgradePolicy {
+        // TODO: remove this, for debug usage now //
+        self.default
+            .as_ref()
+            .map(|x| x.upgrade_policy)
+            .unwrap_or_default()
+    }
 }
 
 impl<'a> Config {
@@ -50,12 +70,13 @@ impl<'a> Config {
 }
 
 impl BinaryTable {
-    pub fn src(&self, version: &str) -> String {
-        self.src.replace("{version}", version)
+    pub fn src(&self, version: &Version) -> String {
+        self.src.replace("{version}", &format!("{}", version))
     }
 
-    pub fn asset_download_filename(&self, version: &str) -> String {
-        self.asset_download_filename.replace("{version}", version)
+    pub fn asset_download_filename(&self, version: &Version) -> String {
+        self.asset_download_filename
+            .replace("{version}", &format!("{}", version))
     }
 
     pub fn repo(&self) -> &str {
@@ -65,6 +86,77 @@ impl BinaryTable {
     pub fn dst(&self) -> &str {
         &self.dst
     }
+}
+
+#[derive(Debug, Copy, Clone, Deserialize)]
+pub enum UpgradePolicy {
+    #[serde(rename(deserialize = "always"))]
+    Always,
+    #[serde(rename(deserialize = "upgrade"))]
+    Upgrade,
+    #[serde(rename(deserialize = "skip_when_exist"))]
+    SkipWhenExist,
+}
+
+impl Default for UpgradePolicy {
+    fn default() -> Self {
+        UpgradePolicy::Upgrade
+    }
+}
+
+impl UpgradePolicy {
+    pub fn need_to_upgrade(&self, bin_status: &BinaryStatus, latest_version: &Version) -> bool {
+        use BinaryStatus::*;
+        use UpgradePolicy::*;
+
+        match self {
+            Always => true,
+            Upgrade => match bin_status {
+                ExistWithVersion(version) => version < latest_version,
+                Exist => {
+                    eprintln!("Can not get version from binary, ugprade anyway");
+                    true
+                }
+                _ => true,
+            },
+            SkipWhenExist => match bin_status {
+                NotFound => true,
+                _ => false,
+            },
+        }
+    }
+}
+
+pub fn binary_status<P: AsRef<Path>>(path: P) -> anyhow::Result<BinaryStatus> {
+    lazy_static! {
+        static ref VERSION_RE: Regex = Regex::new(r"(\d+).(\d+).(\d+)").unwrap();
+    }
+    fn inner(path: &Path) -> anyhow::Result<BinaryStatus> {
+        if path.exists() {
+            let output = Command::new(path).arg("--version").output()?;
+            let stdout = String::from_utf8(output.stdout)?;
+            let stderr = String::from_utf8(output.stderr)?;
+            let version = vec![&stdout, &stderr]
+                .into_iter()
+                .filter_map(|name| VERSION_RE.find(&name))
+                .map(|m| Version::parse(m.as_str()).unwrap())
+                .next();
+            match version {
+                Some(version) => Ok(BinaryStatus::ExistWithVersion(version)),
+                None => Ok(BinaryStatus::Exist),
+            }
+        } else {
+            Ok(BinaryStatus::NotFound)
+        }
+    }
+    inner(path.as_ref())
+}
+
+#[derive(Debug)]
+pub enum BinaryStatus {
+    NotFound,
+    Exist,
+    ExistWithVersion(Version),
 }
 
 pub enum Archive<T: AsRef<[u8]>> {

@@ -1,3 +1,19 @@
+Executable upgrade policy
+---
+(draft)
+executable_upgrade_policy:
+- skip_when_exist: if executable exist, skip downloading.
+- upgrade: if executable is older than latest release, upgrade.
+- always
+
+So for this policy, we need to check the executable status
+- not exist: download latest anyway
+- exist but old
+  - for 'skip_when_exist': skip
+   for 'upgrade': download
+- exist and latest: skip downloading
+
+
 
 download only return the target executable 
 ---

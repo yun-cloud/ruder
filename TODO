@@ -1,5 +1,2 @@
-- executable update policy
-  - skip_when_exist
-  - upgrade: check version
 - Not just for executable. Become a general release-asset downloader
 - multithreading
