@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
 
     for binary in config.binaries() {
         if let Err(err) = run_on_binary(&client, &config, &binary).await {
-            eprintln!("run_on_binary - err: {}", err);
+            eprintln!("run_on_binary - err: {:?}", err);
             continue;
         }
     }

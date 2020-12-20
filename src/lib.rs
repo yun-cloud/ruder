@@ -49,8 +49,9 @@ impl Config {
     pub fn need_to_upgrade(&self, binary: &BinaryTable, latest_version: &Version) -> bool {
         let policy = self.upgrade_policy();
         let dst = self.bin_dir().join(binary.dst());
-        let bin_status = binary_status(dst).unwrap_or(BinaryStatus::NotFound);
-        log::info!("bin_status: {:?}", bin_status);
+        let bin_status = binary_status(dst)
+            .map_err(|e| log::warn!("binary_status() failed: {}", e))
+            .unwrap_or(BinaryStatus::NotFound);
 
         policy.need_to_upgrade(&bin_status, latest_version)
     }
@@ -189,6 +190,10 @@ impl<T: AsRef<[u8]>> Archive<T> {
         } else if name.ends_with(".zip") {
             Ok(Zip(ZipArchive::new(cur)?))
         } else {
+            log::warn!(
+                "Treat {} as raw binary. May caused by unhandled file extension",
+                name
+            );
             Ok(Raw(cur))
         }
     }

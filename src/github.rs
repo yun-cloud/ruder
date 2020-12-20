@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::anyhow;
+use anyhow::Context;
 use bytes::Buf;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -56,15 +57,20 @@ pub async fn query_latest_release(client: &Client, repo: &str) -> anyhow::Result
     let request_url = Url::parse(&format!(
         "https://api.github.com/repos/{repo}/releases/latest",
         repo = repo
-    ))?;
+    ))
+    .with_context(|| "Fail to parse url")?;
 
     let response = client
         .get(request_url.as_str())
         .header(header::ACCEPT, "application/vnd.github.v3+json")
         .send()
-        .await?;
+        .await
+        .with_context(|| "Fail to to send request")?;
 
-    let latest_release: Release = response.json().await?;
+    let latest_release: Release = response
+        .json()
+        .await
+        .with_context(|| "Fail to deserialize json format of response into Release struct")?;
 
     Ok(latest_release)
 }
