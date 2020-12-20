@@ -4,10 +4,10 @@ use std::io;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
-use query_the_github_api::github::{create_github_client, query_latest_release};
-use query_the_github_api::Archive;
-use query_the_github_api::BinaryTable;
-use query_the_github_api::Config;
+use ruder::github::{create_github_client, query_latest_release};
+use ruder::Archive;
+use ruder::BinaryTable;
+use ruder::Config;
 
 use anyhow::anyhow;
 use anyhow::Context;

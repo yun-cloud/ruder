@@ -749,30 +749,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "query-the-github-api"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytes",
- "flate2",
- "lazy_static",
- "log",
- "pretty_env_logger",
- "regex",
- "reqwest",
- "semver",
- "serde",
- "serde_json",
- "skip_error",
- "tar",
- "thiserror",
- "tokio",
- "toml",
- "url",
- "zip",
-]
-
-[[package]]
 name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -895,6 +871,30 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "winreg",
+]
+
+[[package]]
+name = "ruder"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "flate2",
+ "lazy_static",
+ "log",
+ "pretty_env_logger",
+ "regex",
+ "reqwest",
+ "semver",
+ "serde",
+ "serde_json",
+ "skip_error",
+ "tar",
+ "thiserror",
+ "tokio",
+ "toml",
+ "url",
+ "zip",
 ]
 
 [[package]]

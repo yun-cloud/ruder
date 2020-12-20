@@ -1,5 +1,5 @@
 [package]
-name = "query-the-github-api"
+name = "ruder"
 version = "0.1.0"
 authors = ["chchang <ookk8282@gmail.com>"]
 edition = "2018"
