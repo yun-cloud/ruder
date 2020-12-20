@@ -1,3 +1,4 @@
+use std::env;
 use std::path::PathBuf;
 
 use anyhow::anyhow;
@@ -60,8 +61,14 @@ pub async fn query_latest_release(client: &Client, repo: &str) -> anyhow::Result
     ))
     .with_context(|| "Fail to parse url")?;
 
+    lazy_static! {
+        static ref USERNAME: String = env::var("GITHUB_USERNAME").unwrap();
+        static ref TOKEN: String = env::var("GITHUB_PERSONAL_ACCESS_TOKEN").unwrap();
+    }
+
     let response = client
         .get(request_url.as_str())
+        .basic_auth(&*USERNAME, Some(&*TOKEN))
         .header(header::ACCEPT, "application/vnd.github.v3+json")
         .send()
         .await
