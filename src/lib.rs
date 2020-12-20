@@ -11,6 +11,7 @@ use std::process::Command;
 use flate2::read::GzDecoder;
 use lazy_static::lazy_static;
 use regex::Regex;
+use semver::Version;
 use serde::Deserialize;
 use zip::ZipArchive;
 
@@ -61,12 +62,13 @@ impl<'a> Config {
 }
 
 impl BinaryTable {
-    pub fn src(&self, version: &str) -> String {
-        self.src.replace("{version}", version)
+    pub fn src(&self, version: &Version) -> String {
+        self.src.replace("{version}", &format!("{}", version))
     }
 
-    pub fn asset_download_filename(&self, version: &str) -> String {
-        self.asset_download_filename.replace("{version}", version)
+    pub fn asset_download_filename(&self, version: &Version) -> String {
+        self.asset_download_filename
+            .replace("{version}", &format!("{}", version))
     }
 
     pub fn repo(&self) -> &str {
@@ -106,10 +108,10 @@ pub fn binary_status<P: AsRef<Path>>(path: P) -> anyhow::Result<BinaryStatus> {
             let version = vec![&stdout, &stderr]
                 .into_iter()
                 .filter_map(|name| VERSION_RE.find(&name))
-                .next()
-                .map(|m| m.as_str().to_owned());
+                .map(|m| Version::parse(m.as_str()).unwrap())
+                .next();
             match version {
-                Some(version) => Ok(BinaryStatus::ExistWithVersion(version.as_str().to_owned())),
+                Some(version) => Ok(BinaryStatus::ExistWithVersion(version)),
                 None => Ok(BinaryStatus::Exist),
             }
         } else {
@@ -123,7 +125,7 @@ pub fn binary_status<P: AsRef<Path>>(path: P) -> anyhow::Result<BinaryStatus> {
 pub enum BinaryStatus {
     NotFound,
     Exist,
-    ExistWithVersion(String),
+    ExistWithVersion(Version),
 }
 
 pub enum Archive<T: AsRef<[u8]>> {
