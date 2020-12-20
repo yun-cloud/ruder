@@ -121,10 +121,7 @@ impl UpgradePolicy {
                 }
                 _ => true,
             },
-            SkipWhenExist => match bin_status {
-                NotFound => true,
-                _ => false,
-            },
+            SkipWhenExist => matches!(bin_status, NotFound),
         }
     }
 }
