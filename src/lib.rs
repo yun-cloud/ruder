@@ -50,6 +50,7 @@ impl Config {
         let policy = self.upgrade_policy();
         let dst = self.bin_dir().join(binary.dst());
         let bin_status = binary_status(dst).unwrap_or(BinaryStatus::NotFound);
+        log::info!("bin_status: {:?}", bin_status);
 
         policy.need_to_upgrade(&bin_status, latest_version)
     }
@@ -105,7 +106,7 @@ impl Default for UpgradePolicy {
 }
 
 impl UpgradePolicy {
-    pub fn need_to_upgrade(&self, bin_status: &BinaryStatus, latest_version: &Version) -> bool {
+    fn need_to_upgrade(&self, bin_status: &BinaryStatus, latest_version: &Version) -> bool {
         use BinaryStatus::*;
         use UpgradePolicy::*;
 
@@ -127,7 +128,7 @@ impl UpgradePolicy {
     }
 }
 
-pub fn binary_status<P: AsRef<Path>>(path: P) -> anyhow::Result<BinaryStatus> {
+fn binary_status<P: AsRef<Path>>(path: P) -> anyhow::Result<BinaryStatus> {
     lazy_static! {
         static ref VERSION_RE: Regex = Regex::new(r"(\d+).(\d+).(\d+)").unwrap();
     }
@@ -143,7 +144,10 @@ pub fn binary_status<P: AsRef<Path>>(path: P) -> anyhow::Result<BinaryStatus> {
                 .next();
             match version {
                 Some(version) => Ok(BinaryStatus::ExistWithVersion(version)),
-                None => Ok(BinaryStatus::Exist),
+                None => {
+                    eprintln!("cannot get version from {:?}", path);
+                    Ok(BinaryStatus::Exist)
+                }
             }
         } else {
             Ok(BinaryStatus::NotFound)
@@ -153,7 +157,7 @@ pub fn binary_status<P: AsRef<Path>>(path: P) -> anyhow::Result<BinaryStatus> {
 }
 
 #[derive(Debug)]
-pub enum BinaryStatus {
+enum BinaryStatus {
     NotFound,
     Exist,
     ExistWithVersion(Version),

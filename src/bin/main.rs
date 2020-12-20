@@ -4,7 +4,6 @@ use std::io;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
-use query_the_github_api::binary_status;
 use query_the_github_api::github::{create_github_client, query_latest_release};
 use query_the_github_api::Archive;
 use query_the_github_api::BinaryTable;
@@ -58,15 +57,12 @@ async fn run_on_binary(
     let version = latest_release.version()?;
     log::info!("version of release: {}", version);
 
-    let dst = bin_dir.join(binary.dst());
-    let bin_status = binary_status(&dst).with_context(|| "Fail to get binary status")?;
-    log::warn!("binary_status: {:?}", bin_status);
-
     if !config.need_to_upgrade(&binary, &version) {
         return Ok(());
     }
 
     let src = binary.src(&version);
+    let dst = bin_dir.join(binary.dst());
     let asset_download_filename = PathBuf::from(&binary.asset_download_filename(&version));
 
     let (download_asset, download_filename) = latest_release

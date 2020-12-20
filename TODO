@@ -1,2 +1,5 @@
 - Not just for executable. Become a general release-asset downloader
 - multithreading
+- the way to get version from executable
+  - some of them may not get version by "./${executable} --version"
+- handle arch
