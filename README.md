@@ -1,6 +1,61 @@
+Generalize
+---
+
+At first, this project is mainly for
+
+#### `[[binary]]`
+
+- downloading pre-built binaries from latest github releases.
+    - Github API - query latest release
+    - (upgrade policy: compare latest version and version of local binary)
+    - download pre-built binary
+    - (extract)
+    - save to destination
+    - chmod +x
+
+#### `[[repo]]`
+- get the repo by
+  - git clone
+  - download source code tar from latest release then untar
+- git pull
+- branch
+- do something about this
+  - link some file to someplace
+  - build, then link or put some path into PATH
+      - how to handle requirement, like cmake, ninja
+
+#### `[[install-script]]`
+- get the script
+- run the script
+- check installation succeed or failed
+
+#### `[[url]]`
+- pure url
+    - curl -fL {url} -O
+
+
+Select certain version instead of latest
+---
+
+
+
+Handle arch
+---
+
+mainly from `uname -sm`
+- `uname -s`: linux vs. mac os vs. windows
+- `uname -m`: x86_64, 386...
+
+some reference
+- https://direnv.net/install.sh
+- https://github.com/xxxserxxx/gotop/blob/master/scripts/download.sh
+
+trouble:
+- how to test on different environment
+
 Executable upgrade policy
 ---
-(draft)
+
 executable_upgrade_policy:
 - skip_when_exist: if executable exist, skip downloading.
 - upgrade: if executable is older than latest release, upgrade.
@@ -15,7 +70,7 @@ So for this policy, we need to check the executable status
 
 
 
-download only return the target executable 
+download only return the target executable
 ---
 
 I want the `download` function to abstract whether the executable compressed or not, just return the executable directly.

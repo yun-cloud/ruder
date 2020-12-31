@@ -51,7 +51,7 @@ impl Config {
         let policy = self.upgrade_policy();
         let dst = self.bin_dir().join(binary.dst());
         let bin_status = binary_status(dst)
-            .map_err(|e| log::warn!("binary_status() failed: {}", e))
+            .map_err(|e| log::warn!("binary_status() failed: {:?}", e))
             .unwrap_or(BinaryStatus::NotFound);
         log::info!("bin_status: {:?}", bin_status);
 
@@ -93,7 +93,7 @@ impl BinaryTable {
 }
 
 #[derive(Debug, Copy, Clone, Deserialize)]
-pub enum UpgradePolicy {
+enum UpgradePolicy {
     #[serde(rename(deserialize = "always"))]
     Always,
     #[serde(rename(deserialize = "upgrade"))]
