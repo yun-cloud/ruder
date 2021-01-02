@@ -1,4 +1,3 @@
-- use more async function
 - Not just for executable. Become a general release-asset downloader
 - multithreading
 - the way to get version from executable

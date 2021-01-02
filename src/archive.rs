@@ -1,6 +1,10 @@
-use std::path::Path;
 use flate2::read::GzDecoder;
 use std::io::{self, Cursor, Read};
+use std::mem::MaybeUninit;
+use std::path::Path;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+use tokio::io::AsyncRead;
 use zip::ZipArchive;
 
 pub enum Archive<T: AsRef<[u8]>> {
@@ -79,5 +83,19 @@ impl<'a, T: AsRef<[u8]>> Read for Extract<'a, T> {
             Zip(r) => r.read(buf),
             Raw(r) => r.read(buf),
         }
+    }
+}
+
+impl<'a, T: AsRef<[u8]>> AsyncRead for Extract<'a, T> {
+    unsafe fn prepare_uninitialized_buffer(&self, _buf: &mut [MaybeUninit<u8>]) -> bool {
+        false
+    }
+
+    fn poll_read(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+        buf: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
+        Poll::Ready(io::Read::read(self.get_mut(), buf))
     }
 }

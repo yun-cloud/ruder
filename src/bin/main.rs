@@ -1,10 +1,6 @@
-use std::fs;
-use std::fs::File;
-use std::io;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
-use ruder::github::{create_github_client, query_latest_release};
 use ruder::Archive;
 use ruder::BinaryTable;
 use ruder::Config;
@@ -13,14 +9,20 @@ use anyhow::anyhow;
 use anyhow::Context;
 use log::info;
 use reqwest::Client;
+use ruder::github::{create_github_client, query_latest_release};
+use tokio::fs::{self, File};
+use tokio::io;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
 
-    let config: Config =
-        toml::from_slice(&fs::read("binary.toml").with_context(|| "Fail to read 'binary.toml'")?)
-            .with_context(|| "Fail to deserialize 'binary.toml'")?;
+    let config: Config = {
+        let content = fs::read("binary.toml")
+            .await
+            .with_context(|| "Fail to read 'binary.toml'")?;
+        toml::from_slice(&content).with_context(|| "Fail to deserialize 'binary.toml'")?
+    };
 
     let client = create_github_client()
         .await
@@ -47,6 +49,7 @@ async fn run_on_binary(
     let bin_dir = config.bin_dir();
     // info!("bin_dir: {:?}", bin_dir);
     fs::create_dir_all(&bin_dir)
+        .await
         .with_context(|| format!("Fail to create all dir for {:?}", bin_dir))?;
 
     let latest_release = query_latest_release(&client, binary.repo())
@@ -90,15 +93,21 @@ async fn run_on_binary(
         .extract(&src)
         .with_context(|| "Fail to extract archive")?;
 
-    let mut dst_f = File::create(&dst).with_context(|| "Fail to create destination file")?;
+    let mut dst_f = File::create(&dst)
+        .await
+        .with_context(|| "Fail to create destination file")?;
     io::copy(&mut executable, &mut dst_f)
+        .await
         .with_context(|| "fail to copy download executable to destination file")?;
 
     let mut perms = fs::metadata(&dst)
+        .await
         .with_context(|| "Fail to get metadata")?
         .permissions();
     perms.set_mode(0o755);
-    fs::set_permissions(&dst, perms).with_context(|| "Fail to set permissions")?;
+    fs::set_permissions(&dst, perms)
+        .await
+        .with_context(|| "Fail to set permissions")?;
 
     Ok(())
 }
