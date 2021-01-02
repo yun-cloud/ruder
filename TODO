@@ -1,5 +1,7 @@
-- Not just for executable. Become a general release-asset downloader
 - multithreading
+  - because tar::Archive is !Sync, so Extract enum in archive.rs is !Sync, either.
+  - need to make tar::Archive Sync, to achieve multithreading
+- Not just for executable. Become a general release-asset downloader
 - the way to get version from executable
   - some of them may not get version by "./${executable} --version"
 - handle arch
