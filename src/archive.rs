@@ -14,7 +14,7 @@ pub enum Archive<T: AsRef<[u8]>> {
     Raw(Cursor<T>),
 }
 
-pub enum Extract<'a, T: AsRef<[u8]>> {
+pub enum Extract<'a, T: AsRef<[u8]> + Send + Sync> {
     TarGz(tar::Entry<'a, GzDecoder<Cursor<T>>>),
     Tar(tar::Entry<'a, Cursor<T>>),
     Zip(zip::read::ZipFile<'a>),
@@ -40,7 +40,9 @@ impl<T: AsRef<[u8]>> Archive<T> {
             Ok(Raw(cur))
         }
     }
+}
 
+impl<T: AsRef<[u8]> + Send + Sync> Archive<T> {
     pub fn extract<'a>(&'a mut self, src: &str) -> anyhow::Result<Extract<'a, T>> {
         use Archive::*;
 
@@ -73,7 +75,7 @@ impl<T: AsRef<[u8]>> Archive<T> {
     }
 }
 
-impl<'a, T: AsRef<[u8]>> Read for Extract<'a, T> {
+impl<'a, T: AsRef<[u8]> + Send + Sync> Read for Extract<'a, T> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         use Extract::*;
 
@@ -86,7 +88,7 @@ impl<'a, T: AsRef<[u8]>> Read for Extract<'a, T> {
     }
 }
 
-impl<'a, T: AsRef<[u8]>> AsyncRead for Extract<'a, T> {
+impl<'a, T: AsRef<[u8]> + Send + Sync> AsyncRead for Extract<'a, T> {
     unsafe fn prepare_uninitialized_buffer(&self, _buf: &mut [MaybeUninit<u8>]) -> bool {
         false
     }

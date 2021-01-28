@@ -57,3 +57,10 @@ repo = "direnv/direnv"
 asset_download_filename = "direnv.linux-amd64"
 src = "direnv.linux-amd64"
 dst = "direnv"
+
+# Fail. because of no assets available
+# [[binary]]
+# repo = "dylanaraps/neofetch"
+# asset_download_filename = "{version}.tar.gz"
+# src = "neofetch-{version}/neofetch"
+# dst = "neofetch"
