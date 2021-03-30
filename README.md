@@ -13,7 +13,7 @@ At first, this project is mainly for
     - save to destination
     - chmod +x
 
-#### `[[repo]]`
+#### `[[repo]]` (TODO)
 - get the repo by
   - git clone
   - download source code tar from latest release then untar
@@ -24,22 +24,27 @@ At first, this project is mainly for
   - build, then link or put some path into PATH
       - how to handle requirement, like cmake, ninja
 
-#### `[[install-script]]`
+#### `[[install-script]]` (TODO)
 - get the script
 - run the script
 - check installation succeed or failed
 
-#### `[[url]]`
+#### `[[url]]` (TODO)
 - pure url
     - curl -fL {url} -O
 
+### `[default]`
+- change default configuration values
 
-Select certain version instead of latest
+(check **binary.toml** as working example)
+
+
+[TODO] Select certain version instead of latest
 ---
 
 
 
-Handle arch
+[TODO] Handle arch
 ---
 
 mainly from `uname -sm`
